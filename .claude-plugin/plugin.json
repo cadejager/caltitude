@@ -1,0 +1,9 @@
+{
+  "name": "calendar-from-email",
+  "version": "0.1.0",
+  "description": "Turns forwarded flight-itinerary emails into calendar events. Reads new emails from an allowlist of senders, extracts each flight leg via a sandboxed reader, and creates events on a chosen CalDAV calendar.",
+  "author": {
+    "name": "Chris DeJager"
+  },
+  "keywords": ["calendar", "email", "flights", "itinerary", "gmail", "caldav"]
+}

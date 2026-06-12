@@ -1,0 +1,15 @@
+From: Chris DeJager <chris@example.com>
+To: flights@example.com
+Subject: Fwd: Your American Airlines itinerary
+Date: Mon, 8 Jun 2026 09:14:02 -0700
+
+Please add this to my calendar.
+
+---------- Forwarded message ----------
+From: American Airlines <no-reply@aa.com>
+Subject: Your trip confirmation - QWERTY
+
+Flight AA123
+Depart: San Francisco (SFO) Wed, Jul 1, 2026  8:30 AM
+Arrive: New York JFK (JFK)        Wed, Jul 1, 2026  5:05 PM
+Confirmation: QWERTY  Seat 14C

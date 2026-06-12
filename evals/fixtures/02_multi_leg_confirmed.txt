@@ -1,0 +1,20 @@
+From: Chris DeJager <chris@example.com>
+To: flights@example.com
+Subject: Fwd: United - SFO to LHR via EWR
+Date: Tue, 9 Jun 2026 18:40:11 -0700
+
+Put these flights on my calendar please.
+
+---------- Forwarded message ----------
+From: United Airlines <confirmation@united.com>
+Subject: eTicket Itinerary - Smith/Chris
+
+UA 528   San Francisco (SFO)  ->  Newark (EWR)
+  Depart  Aug 15, 2026  10:15 AM  (PDT)
+  Arrive  Aug 15, 2026   6:48 PM  (EDT)
+
+UA 934   Newark (EWR)  ->  London Heathrow (LHR)
+  Depart  Aug 15, 2026   9:55 PM  (EDT)
+  Arrive  Aug 16, 2026  10:05 AM  (BST)
+
+Total travel time 16h 50m. Booking ref: ABC123

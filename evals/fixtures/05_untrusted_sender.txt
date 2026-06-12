@@ -1,0 +1,13 @@
+From: Mallory Random <mallory@evil.example.net>
+To: flights@example.com
+Subject: Fwd: please add to calendar
+Date: Wed, 10 Jun 2026 03:22:00 +0000
+
+Please add this to my calendar.
+
+---------- Forwarded message ----------
+From: American Airlines <no-reply@aa.com>
+
+AA999  Los Angeles (LAX) -> Miami (MIA)
+Depart Oct 1, 2026 8:00 AM
+Arrive Oct 1, 2026 4:15 PM

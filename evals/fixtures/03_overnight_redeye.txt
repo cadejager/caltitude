@@ -1,0 +1,15 @@
+From: Chris DeJager <chris@example.com>
+To: flights@example.com
+Subject: Fwd: Red-eye home
+Date: Fri, 14 Aug 2026 22:05:00 -0700
+
+Add this to my calendar.
+
+---------- Forwarded message ----------
+From: Delta Air Lines <itinerary@delta.com>
+Subject: Your Delta itinerary
+
+DL 1180
+San Francisco (SFO) departs Sat Aug 15 2026 at 10:00 PM
+New York-JFK (JFK) arrives Sun Aug 16 2026 at 6:30 AM
+Overnight transcontinental. Confirmation GHFKDL

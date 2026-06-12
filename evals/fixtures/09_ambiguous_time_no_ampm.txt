@@ -1,0 +1,16 @@
+From: Chris DeJager <chris@example.com>
+To: flights@example.com
+Subject: Fwd: itinerary (sparse)
+Date: Sat, 13 Jun 2026 08:00:00 -0700
+
+Please add this to my calendar.
+
+---------- Forwarded message ----------
+From: Air France <noreply@airfrance.fr>
+
+AF 83  Paris CDG -> San Francisco SFO
+Depart 14/07/2026 10:30
+Arrive 14/07/2026 13:05
+
+(Times shown with no AM/PM and no explicit timezone. CDG local on departure,
+SFO local on arrival; both are 24-hour clock.)

@@ -1,0 +1,12 @@
+# Build artifacts
+*.plugin
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Runtime config written at setup (may contain the sender allowlist)
+config.json
+
+# Scratch / throwaway files and dirs
+_*

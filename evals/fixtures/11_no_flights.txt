@@ -1,0 +1,13 @@
+From: Chris DeJager <chris@example.com>
+To: flights@example.com
+Subject: Fwd: hotel booking
+Date: Mon, 15 Jun 2026 10:00:00 -0700
+
+Please add this to my calendar.
+
+---------- Forwarded message ----------
+From: Marriott <reservations@marriott.com>
+
+Your reservation at Courtyard Downtown is confirmed.
+Check-in: Jul 4, 2026   Check-out: Jul 6, 2026
+No flights in this email.
