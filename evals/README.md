@@ -1,4 +1,4 @@
-# Evals for `calendar-from-email`
+# Evals for `caltitude`
 
 Two layers, matching the plugin's two kinds of risk:
 

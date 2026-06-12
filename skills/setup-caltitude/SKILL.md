@@ -1,9 +1,9 @@
 ---
-name: setup-calendar-from-email
-description: First-time setup for the calendar-from-email plugin. Use when the user wants to set up, configure, or initialize automatic calendar events from forwarded emails — collecting allowed sender addresses, the target Nextcloud calendar, and the run schedule. Triggers include "set up calendar from email", "configure the flight email plugin", "set up forwarding to my calendar".
+name: setup-caltitude
+description: First-time setup for the caltitude plugin. Use when the user wants to set up, configure, or initialize automatic calendar events from forwarded emails — collecting allowed sender addresses, the target Nextcloud calendar, and the run schedule. Triggers include "set up caltitude", "set up calendar from email", "configure the flight email plugin", "set up forwarding to my calendar".
 ---
 
-# Set up calendar-from-email
+# Set up caltitude
 
 Run an interactive, plain-language setup that writes a config file the
 `process-flight-emails` skill reads on every run. Do NOT expose file paths or

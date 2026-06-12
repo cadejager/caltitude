@@ -1,4 +1,4 @@
-# calendar-from-email
+# caltitude
 
 Forward an itinerary email to a dedicated inbox, and this plugin turns each
 flight, hotel, and car rental into an event on your calendar — automatically.
@@ -16,7 +16,7 @@ flight, hotel, and car rental into an event on your calendar — automatically.
 
 ## Setup
 
-Run the **setup-calendar-from-email** skill once. It asks for:
+Run the **setup-caltitude** skill once. It asks for:
 
 - **Trusted senders** — the addresses you'll forward from, each entered as its own
   field. Only emails from these can ever create events.
@@ -78,7 +78,7 @@ Layout:
 | Path | What it is |
 | --- | --- |
 | `.claude-plugin/plugin.json` | Plugin manifest |
-| `skills/` | The `setup-calendar-from-email` and `process-flight-emails` skills |
+| `skills/` | The `setup-caltitude` and `process-flight-emails` skills |
 | `agents/email-event-extractor.md` | Sandboxed reader agent (the injection boundary) |
 | `scripts/convert_time.py` | Deterministic timezone converter (local↔UTC↔zone) + `add-days` date math |
 | `evals/` | Converter unit tests + reader/orchestrator behavioral specs |
@@ -93,7 +93,7 @@ python3 evals/test_convert_time.py
 Build the installable plugin package (excludes repo-only files):
 
 ```bash
-zip -r /tmp/calendar-from-email.plugin . \
+zip -r /tmp/caltitude.plugin . \
   -x ".git/*" -x "*.plugin" -x "docs/*" -x "evals/*" \
   -x "*/__pycache__/*" -x ".gitignore"
 ```

@@ -1,6 +1,6 @@
 ---
 name: process-flight-emails
-description: Process new forwarded itinerary emails and create calendar events from them. Use when the user wants to run the calendar-from-email job, check for new flight emails, or sync forwarded itineraries to their calendar — and when invoked on a schedule. Triggers include "process my flight emails", "add my forwarded flights to the calendar", "run the calendar email sync".
+description: Process new forwarded itinerary emails and create calendar events from them. Use when the user wants to run the caltitude job, check for new flight emails, or sync forwarded itineraries to their calendar — and when invoked on a schedule. Triggers include "process my flight emails", "add my forwarded flights to the calendar", "run the caltitude sync".
 ---
 
 # Process flight emails
@@ -15,7 +15,7 @@ confirmation flag gate actions.
 
 All config and run-state live in **Nextcloud WebDAV** (POSIX paths); nothing is
 kept on the local filesystem except transient temp files.
-- **Config:** `.config/caltitude/config.json` — written by `setup-calendar-from-email`.
+- **Config:** `.config/caltitude/config.json` — written by `setup-caltitude`.
   Read it with `nc_webdav_read_file`. If it is missing/unreadable, tell the user to
   run setup first and **stop**. Fields: `allowedSenders` (lowercase exact
   addresses), `calendarName` (the calendar's **internal `name`** from

@@ -1,4 +1,4 @@
-From: Sam Carter <chris@example.com>
+From: Sam Carter <sam@example.com>
 To: flights@example.com
 Subject: Fwd: itinerary (sparse)
 Date: Sat, 13 Jun 2026 08:00:00 -0700

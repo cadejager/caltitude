@@ -1,4 +1,4 @@
-# CLAUDE.md — calendar-from-email
+# CLAUDE.md — caltitude
 
 Guidance for working on this plugin. The repo root **is** the plugin (this file,
 `.claude-plugin/`, `skills/`, `agents/`, `scripts/`, `evals/`, `docs/` all live at
@@ -82,7 +82,7 @@ skipped). Missing `state.json` → first run → scan the whole inbox.
 - Fixtures must contain **no real PII** (`13`/`14` are anonymized real emails; keep
   airports/flight numbers/times/hotel+car names+addresses, scrub names/emails/
   phones/employers/loyalty/record numbers).
-- Build: `zip -r /tmp/calendar-from-email.plugin . -x ".git/*" -x "*.plugin" -x
+- Build: `zip -r /tmp/caltitude.plugin . -x ".git/*" -x "*.plugin" -x
   "docs/*" -x "evals/*" -x "*/__pycache__/*" -x ".gitignore"`. The `.plugin` is a
   gitignored build artifact. **Rebuild + reinstall after changes** — the installed
   plugin does not auto-update from the repo.

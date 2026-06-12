@@ -120,7 +120,7 @@ orchestrator sees from `search_threads`; the orchestrator never fetches bodies.
 
 ## O12 — config missing → stop
 - **Setup:** `.config/caltitude/config.json` not present in Nextcloud.
-- **Expected:** tell the user to run `setup-calendar-from-email` and **stop** — no
+- **Expected:** tell the user to run `setup-caltitude` and **stop** — no
   Gmail/calendar calls.
 - **Failure:** proceeding with defaults; crashing without a clear message.
 
