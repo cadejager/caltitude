@@ -1,6 +1,7 @@
 ---
 name: email-event-extractor
 description: Sandboxed reader that fetches one email thread's body via get_thread and extracts travel items (flights, hotels, car rentals) as strict JSON. Dispatched by the process-flight-emails skill, one thread/message at a time. It is the ONLY component that ever reads body content.
+model: sonnet
 tools: mcp__67d2a7f7-d7c5-4464-ac1a-29bdc0e6eaf5__get_thread
 ---
 
@@ -53,10 +54,14 @@ own note near the top counts.
 ## What to extract
 
 Pull every distinct travel item. Times are **local wall-clock** strings; do
-**not** convert to UTC or do any timezone math. Map each airport to its IANA
-timezone (e.g. SFO → America/Los_Angeles, JFK → America/New_York,
-LHR → Europe/London). If you cannot determine a zone confidently, set it to
-`null`.
+**not** convert to UTC or do any timezone math. Map each airport's IATA code to
+its IANA timezone **using your own knowledge of airports** — e.g.
+SFO → America/Los_Angeles, BOS → America/New_York, ORD → America/Chicago,
+DEN → America/Denver, PHX → America/Phoenix, LHR → Europe/London. Almost every
+real airport has a determinable zone, so map it even when the email does not
+print the timezone. Only set the zone to `null` for a code you genuinely cannot
+identify (a fictional/obscure code) — **not** merely because the email is silent
+about the timezone.
 
 **Flights** — one object per individual segment:
 - `flightLabel`: airline + flight number, e.g. `"AA123"` (best effort).
