@@ -1,6 +1,7 @@
 ---
 name: process-flight-emails
 description: Process new forwarded itinerary emails and create calendar events from them. Use when the user wants to run the caltitude job, check for new flight emails, or sync forwarded itineraries to their calendar — and when invoked on a schedule. Triggers include "process my flight emails", "add my forwarded flights to the calendar", "run the caltitude sync".
+model: sonnet
 ---
 
 # Process flight emails

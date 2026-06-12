@@ -36,6 +36,13 @@ the contracts between them. Keep them precise and mutually consistent.
   lowercase, exact compare — never substring-match the raw header), AND (b) the
   reader reports calendar-add intent from the forwarder's note. Intent is judged by
   meaning; there is no configured phrase.
+- **The sender gate stays in the orchestrator — never move it into the reader.**
+  The orchestrator checks the `From` from `search_threads` (the real inbox
+  envelope, which an attacker can't forge to match the allowlist). The reader only
+  sees the body, whose forwarded headers are attacker-spoofable free text (see
+  fixture `08`). Putting the trust decision in the body-exposed, powerless reader
+  would base it on a forgeable `From` and is a security regression. Trust decisions
+  live in the component that sees only structured metadata and wields the actions.
 - **No LLM date/time math.** Always shell out to `convert_time.py` for UTC/zone
   conversion and date shifting. Adding ad-hoc "the model computes the time" steps is
   a regression.
