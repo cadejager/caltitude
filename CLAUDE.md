@@ -48,7 +48,8 @@ Nextcloud MCP (`mcp__Nextcloud_MCP__*`):
   checkout/dropoff day, pass `end = inclusive_end + 1 day`
   (`convert_time.py add-days <date> --days 1`). This also makes same-day items valid.
 - `nc_webdav_create_directory` is **not recursive** — create each path level in
-  order (`.local`, `.local/state`, `.local/state/caltitude`).
+  order (`.local`, `.local/state`, `.local/state/caltitude`). It returns 409 when a
+  parent is missing, 201 on create, 405 if the directory already exists.
 - Config/state live in Nextcloud WebDAV, locally stateless:
   `.config/caltitude/config.json`, `.local/state/caltitude/state.json`.
 

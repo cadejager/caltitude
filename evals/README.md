@@ -38,7 +38,7 @@ warnings, the RFC-2822 `Date:` header path, `--tz` being ignored when the input
 carries an offset, the `now` input, invalid timezone / time handling, and an
 overnight timezone-crossing red-eye.
 
-A green run looks like `Ran 37 tests ... OK`. If `scripts/convert_time.py` changes
+A green run looks like `Ran 43 tests ... OK`. If `scripts/convert_time.py` changes
 behavior, update the expected values here in the same PR (the values were derived
 from the real script, not assumed).
 

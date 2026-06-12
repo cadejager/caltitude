@@ -1,9 +1,9 @@
 {
   "name": "caltitude",
   "version": "0.1.0",
-  "description": "Turns forwarded flight-itinerary emails into calendar events. Reads new emails from an allowlist of senders, extracts each flight leg via a sandboxed reader, and creates events on a chosen CalDAV calendar.",
+  "description": "Turns forwarded travel emails (flights, hotels, car rentals) into Nextcloud calendar events. Reads new mail from an allowlist of senders, extracts each item via a sandboxed reader, and creates events on a chosen Nextcloud calendar.",
   "author": {
     "name": "Chris DeJager"
   },
-  "keywords": ["calendar", "email", "flights", "itinerary", "gmail", "caldav"]
+  "keywords": ["calendar", "email", "travel", "flights", "hotels", "car-rental", "itinerary", "gmail", "nextcloud"]
 }
