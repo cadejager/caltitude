@@ -45,6 +45,10 @@ intent by meaning.
   read-only tool (`get_thread`) and no action tools — no calendar, labeling,
   shell, or file access — so instructions hidden in a body can't cause anything.
   The orchestrator never fetches the body and gates only on the `From` address.
+- **Validated reader output**: even the reader's *result* is treated as untrusted —
+  the orchestrator runs it through a deterministic validator and uses only the
+  normalized, format-checked JSON, so a subverted reader can't smuggle instructions
+  or a malformed value back into the trusted orchestrator.
 
 ## Storage (Nextcloud, locally stateless)
 
@@ -81,7 +85,8 @@ Layout:
 | `skills/` | The `setup-caltitude` and `process-flight-emails` skills |
 | `agents/email-event-extractor.md` | Sandboxed reader agent (the injection boundary) |
 | `scripts/convert_time.py` | Deterministic timezone converter (local↔UTC↔zone) + `add-days` date math |
-| `evals/` | Converter unit tests + reader/orchestrator behavioral specs |
+| `scripts/validate_reader_output.py` | Deterministic guard that validates/normalizes the reader's (untrusted) JSON output |
+| `evals/` | Converter + validator unit tests, and reader/orchestrator behavioral specs |
 | `docs/` | Notes on the Nextcloud and (historical) CalDAV connectors |
 
 Run the converter tests:

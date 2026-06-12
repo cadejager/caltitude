@@ -11,12 +11,13 @@ Two layers, matching the plugin's two kinds of risk:
 
 ```
 evals/
-├── README.md                 ← this file
-├── test_convert_time.py      ← runnable unit tests (layer 1)
-├── reader_agent_evals.md     ← cases for email-event-extractor (layer 2)
-├── orchestrator_evals.md     ← cases for process-flight-emails (layer 2)
-├── expected/                 ← full expected reader output for the real-email fixtures
-└── fixtures/                 ← sample forwarded itineraries (incl. adversarial + real)
+├── README.md                       ← this file
+├── test_convert_time.py            ← runnable unit tests: timezone converter (layer 1)
+├── test_validate_reader_output.py  ← runnable unit tests: reader-output guard (layer 1)
+├── reader_agent_evals.md           ← cases for email-event-extractor (layer 2)
+├── orchestrator_evals.md           ← cases for process-flight-emails (layer 2)
+├── expected/                       ← full expected reader output for the real-email fixtures
+└── fixtures/                       ← sample forwarded itineraries (incl. adversarial + real)
 ```
 
 ## Layer 1 — running the deterministic tests
@@ -25,9 +26,15 @@ Requires only Python 3.9+ (stdlib `zoneinfo`; the plugin's own dependency).
 
 ```bash
 # from the plugin root
-python3 evals/test_convert_time.py            # verbose, all cases
-python3 -m unittest -v evals.test_convert_time  # as a module
+python3 evals/test_convert_time.py            # timezone converter
+python3 evals/test_validate_reader_output.py  # reader-output validator/guard
 ```
+
+`test_validate_reader_output.py` covers the deterministic guard the orchestrator
+runs on the reader's (untrusted) output: rejecting non-schema/prose output
+(second-order injection), dropping items whose shell/date-bound fields are
+malformed (e.g. a `depTz` carrying a shell payload), sanitizing free-text, and
+dropping smuggled unknown keys.
 
 The tests load `scripts/convert_time.py` by path and call `convert()` /
 `parse_input_time()` directly — the same code path the CLI uses — so the
