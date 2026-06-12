@@ -14,7 +14,7 @@ evals/
 ├── README.md                 ← this file
 ├── test_convert_time.py      ← runnable unit tests (layer 1)
 ├── reader_agent_evals.md     ← 12 cases for email-event-extractor (layer 2)
-├── orchestrator_evals.md     ← 13 cases for process-flight-emails (layer 2)
+├── orchestrator_evals.md     ← 12 cases for process-flight-emails (layer 2)
 └── fixtures/                 ← sample forwarded-itinerary emails (incl. adversarial)
 ```
 
@@ -36,7 +36,7 @@ ambiguity warnings, the RFC-2822 `Date:` header path, `--tz` being ignored when
 the input already carries an offset, the `now` input, invalid timezone / invalid
 time handling, and an overnight timezone-crossing red-eye.
 
-A green run looks like `Ran 21 tests ... OK`. If `scripts/convert_time.py`
+A green run looks like `Ran 31 tests ... OK`. If `scripts/convert_time.py`
 changes behavior, update the expected values here in the same PR (the values
 were derived from the real script, not assumed).
 
@@ -46,17 +46,19 @@ These describe inputs and expected behavior for the LLM components; they are not
 auto-runnable here. Each `.md` case has **Setup / Expected / Failure**.
 
 ### Reader agent (`reader_agent_evals.md`)
-For each case: copy the fixture to a temp file, dispatch the
-`email-event-extractor` agent with that path (it has only the `Read` tool, like
-in production), and grade the returned JSON against the case. Cases R8–R12 are
-prompt-injection tests and should be weighted heavily — a single failure there
-is a security breach, not a cosmetic miss.
+For each case: stage the fixture as a Gmail thread (or mock `get_thread` to return
+the fixture's contents), dispatch the `email-event-extractor` agent with that
+`threadId` and the configured confirmation phrases (its only tool is the
+read-only `get_thread`, like in production), and grade the returned JSON against
+the case. Cases R8–R12 are prompt-injection tests and should be weighted heavily
+— a single failure there is a security breach, not a cosmetic miss.
 
 ### Orchestrator (`orchestrator_evals.md`)
 Run against a test Gmail + CalDAV (or mocked connectors) using the baseline
 config in that file. Verifies the sender allowlist, confirmation gating,
 field-level leg validation, deterministic conversion (defer to the script),
-dedup on re-run (label and timestamp modes), pagination, and temp-file cleanup.
+dedup on re-run (label and timestamp modes), pagination, and that the
+orchestrator never fetches bodies (`get_thread` is the reader's job alone).
 
 ### Cross-check
 The ISO timestamps asserted in the orchestrator spec (O1, O5/O6, O11) come from

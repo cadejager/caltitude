@@ -35,10 +35,12 @@ Run the **setup-calendar-from-email** skill once. It asks for:
 - **Sender allowlist** is the boundary: an event is only ever created if the
   email's `From` matches a trusted sender. Others can't add to your calendar.
 - **Confirmation phrase** confirms *you* meant to add it.
-- **Sandboxed reader**: the only component that reads email *content* has no tools
-  and can only return data. Instructions hidden in an email body do nothing — the
-  orchestrator never treats email content as commands, and reads only the `From`
-  header to decide who's trusted.
+- **Sandboxed reader**: the only component that reads email *content* has a single
+  read-only tool (`get_thread`) and no action tools — no calendar, labeling,
+  shell, or file access — so it can read a body but cannot act on it. Instructions
+  hidden in an email body do nothing: the orchestrator never fetches the body or
+  treats email content as commands, and gates only on the `From` address to decide
+  who's trusted.
 
 ## Known limitations
 
