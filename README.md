@@ -61,9 +61,9 @@ The plugin keeps nothing on the local machine. In your Nextcloud files:
   description. (The Nextcloud connector accepts one timezone per event, so a single
   flight can't carry a different arrival zone on its end — the instant and duration
   are still exact.) Flights get a popup reminder before departure.
-- **Hotels** and **car rentals** are single multi-day **all-day** events (check-in
-  → checkout, pickup → dropoff), with the exact times in the description and **no**
-  notification.
+- **Hotels** and **car rentals** are single multi-day **all-day** events spanning
+  check-in through checkout (and pickup through dropoff) **inclusive**, with the
+  exact times in the description and **no** notification.
 
 ## Tagging & dedup
 
@@ -80,7 +80,7 @@ Layout:
 | `.claude-plugin/plugin.json` | Plugin manifest |
 | `skills/` | The `setup-calendar-from-email` and `process-flight-emails` skills |
 | `agents/email-event-extractor.md` | Sandboxed reader agent (the injection boundary) |
-| `scripts/convert_time.py` | Deterministic local↔UTC↔zone timezone converter |
+| `scripts/convert_time.py` | Deterministic timezone converter (local↔UTC↔zone) + `add-days` date math |
 | `evals/` | Converter unit tests + reader/orchestrator behavioral specs |
 | `docs/` | Notes on the Nextcloud and (historical) CalDAV connectors |
 
