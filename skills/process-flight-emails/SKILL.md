@@ -38,9 +38,11 @@ First resolve the `<labelName>` label to its **ID** via `list_labels` (the
 - `trackingMode = timestamp`: `search_threads` with
   `q = in:inbox after:<lastRunISO as epoch or date>`.
 
-`search_threads` is paginated — **loop on `pageToken`** until it's absent, or
-you'll silently process only the first page. Collect each candidate's `threadId`,
-`messageId`, and `From`. Do **not** call `get_thread` here.
+`search_threads` is paginated — **page through it** by passing `pageToken` on each
+call (using the previous response's `nextPageToken`) and stop only when no
+`nextPageToken` is returned, or you'll silently process only the first page.
+Collect each candidate's `threadId`, `messageId`, and `From`. Do **not** call
+`get_thread` here.
 
 ### 2. Filter by sender (From field only)
 Keep a candidate only if its **real address** matches `allowedSenders`. Use only
