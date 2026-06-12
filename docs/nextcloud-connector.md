@@ -7,8 +7,10 @@ connector (see `caldav-plugin-usage.md`, now historical).
 ## Calendar
 
 ### `nc_calendar_list_calendars` — no args
-Returns the user's calendars by **name**. Setup stores the chosen name as
-`calendarName`; every event call passes that name (not a URL).
+Returns each calendar with both an internal **`name`** (e.g. `chris-ai`) and a
+**`display_name`** (e.g. `AI-Chris`). **`nc_calendar_create_event` takes the
+internal `name`** — setup shows the user the display name but stores the internal
+`name` as `calendarName`. (Verified live: passing `chris-ai` works.)
 
 ### `nc_calendar_create_event`
 Key args: `calendar_name`, `title`, `start_datetime`, `end_datetime`, `all_day`,
@@ -22,6 +24,10 @@ Datetime handling (this is the important part):
   local times — unlike the old CalDAV connector, which could only store UTC.
 - `"2026-01-15T14:00:00"` alone → floating local time (avoid; ambiguous).
 - `"2026-01-15"` with `all_day=true` → all-day event (hotels, car rentals).
+  **All-day `end_datetime` is EXCLUSIVE** (verified live): an event with
+  `start 2027-03-01`, `end 2027-03-04` renders on 03-01/02/03 only — `03-04` is not
+  covered. So to show check-in..checkout inclusive, pass `end_datetime` = the
+  inclusive end **+ 1 day** (`convert_time.py add-days <date> --days 1`).
 
 **One timezone per event.** There is a single `timezone` parameter applied to both
 naive `start_datetime` and `end_datetime`. A single event therefore **cannot** put
@@ -46,3 +52,8 @@ Tools: `nc_webdav_create_directory` (create the folders first),
 `nc_webdav_write_file(path, content)`, `nc_webdav_read_file(path)`. Paths are
 relative to the Nextcloud user's files root. Treat a "not found" on
 `state.json` as "no prior run → scan the whole inbox."
+
+**`nc_webdav_create_directory` is not recursive** (verified live: it returns 409
+when a parent is missing, 201 on create, 405 if the dir already exists). Create
+each level in order — e.g. `.local`, then `.local/state`, then
+`.local/state/caltitude`.

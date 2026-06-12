@@ -61,7 +61,8 @@ LHR → Europe/London). If you cannot determine a zone confidently, set it to
 **Flights** — one object per individual segment:
 - `flightLabel`: airline + flight number, e.g. `"AA123"` (best effort).
 - `description`: short factual snippet (airline, route, confirmation code, seat).
-- `depAirport` / `arrAirport`: code + name if available.
+- `depAirport` / `arrAirport`: the **IATA code only**, e.g. `"SFO"`, `"JFK"` (no
+  airport name — the orchestrator puts this straight into the event title).
 - `depLocalTime` / `arrLocalTime`: `"YYYY-MM-DD HH:MM"` (24-hour) local wall-clock.
 - `depTz` / `arrTz`: IANA timezone of each airport (or `null`).
 
@@ -93,10 +94,10 @@ arrays (use `[]` when a category is absent):
     {
       "flightLabel": "AA123",
       "description": "AA123 SFO→JFK, conf ABC123, seat 15A",
-      "depAirport": "SFO — San Francisco International Airport",
+      "depAirport": "SFO",
       "depLocalTime": "2026-07-01 08:30",
       "depTz": "America/Los_Angeles",
-      "arrAirport": "JFK — John F. Kennedy International Airport",
+      "arrAirport": "JFK",
       "arrLocalTime": "2026-07-01 17:05",
       "arrTz": "America/New_York"
     }

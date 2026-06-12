@@ -43,9 +43,25 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+
+def add_days(date_str: str, n: int) -> str:
+    """Return the date `n` days after `date_str` (both `YYYY-MM-DD`).
+
+    Used to turn an inclusive end date (hotel checkout / car dropoff) into the
+    EXCLUSIVE all-day DTEND the calendar wants: Nextcloud all-day events end the
+    day before DTEND, so a stay through 06-11 must be created with end 06-12 to
+    render check-in..checkout inclusive. Also makes a same-day item (start==end)
+    a valid 1-day event. Keeps date math out of the model's head.
+    """
+    try:
+        d = date.fromisoformat(date_str.strip())
+    except ValueError:
+        raise ValueError(f"Could not parse date: {date_str!r}. Use YYYY-MM-DD.")
+    return (d + timedelta(days=n)).isoformat()
 
 
 def parse_input_time(value: str) -> tuple[datetime, bool]:
@@ -87,6 +103,10 @@ def parse_input_time(value: str) -> tuple[datetime, bool]:
 
 
 def load_zone(name: str) -> ZoneInfo:
+    if name is None:
+        # Keep the library contract: callers get a clean ValueError, not a
+        # TypeError from deep inside ZoneInfo/posixpath, when a zone is missing.
+        raise ValueError("a timezone name is required, got None.")
     try:
         return ZoneInfo(name)
     except ZoneInfoNotFoundError:
@@ -241,13 +261,21 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "direction",
-        choices=["to-utc", "to-local", "to-zone"],
+        choices=["to-utc", "to-local", "to-zone", "add-days"],
         help="to-utc: local -> UTC.  to-local: UTC -> local.  "
-        "to-zone: re-express a wall-clock from --from into --to (same instant).",
+        "to-zone: re-express a wall-clock from --from into --to (same instant).  "
+        "add-days: shift a YYYY-MM-DD date by --days (for exclusive all-day ends).",
     )
     parser.add_argument(
         "time",
-        help="Time to convert: ISO-8601, an email Date header, or 'now'.",
+        help="Time/date to operate on: ISO-8601, an email Date header, 'now', "
+        "or a YYYY-MM-DD date for add-days.",
+    )
+    parser.add_argument(
+        "--days",
+        type=int,
+        default=1,
+        help="add-days only: number of days to shift the date (default 1).",
     )
     parser.add_argument(
         "--tz",
@@ -273,6 +301,13 @@ def main(argv: list[str] | None = None) -> int:
         help="Emit the full result as JSON (for scripting).",
     )
     args = parser.parse_args(argv)
+
+    if args.direction == "add-days":
+        try:
+            print(add_days(args.time, args.days))
+        except ValueError as exc:
+            sys.exit(str(exc))
+        return 0
 
     if args.direction == "to-zone" and not (args.from_tz and args.to_tz):
         sys.exit("to-zone requires both --from and --to IANA timezones.")

@@ -48,9 +48,11 @@ adds a short note near the top asking to calendar the trip ("add to calendar",
 the user this is how to trigger scheduling — nothing to enter here.
 
 ### 3. Choose the target calendar
-Call `nc_calendar_list_calendars`. Show the calendar names and ask which to use
-(the one shared back to the user, e.g. `AI-Chris`). Store the chosen **calendar
-name** as `calendarName` (the Nextcloud connector takes a name, not a URL).
+Call `nc_calendar_list_calendars`. Show the **`display_name`** of each calendar and
+ask which to use (the one shared back to the user, e.g. `AI-Chris`). Store that
+calendar's **internal `name`** field as `calendarName` (e.g. `chris-ai`) — NOT the
+display name. `nc_calendar_create_event` accepts the internal name, and passing the
+display name fails.
 
 ### 4. Probe Gmail labeling
 Confirm the connector can list/search messages and add a label (`list_labels`). The
@@ -65,14 +67,16 @@ Ask: scheduled, manual, or both.
 
 ### 6. Write the config to Nextcloud
 Write the config JSON to **`.config/caltitude/config.json`** in Nextcloud via
-`nc_webdav_write_file` (create `.config/caltitude/` with
-`nc_webdav_create_directory` first if needed). Nothing is written to the local
-filesystem. Shape:
+`nc_webdav_write_file`. Create the folders first **one level at a time** —
+`nc_webdav_create_directory` is not recursive, so make `.config`, then
+`.config/caltitude` (a 405 means it already exists, which is fine). Nothing is
+written to the local filesystem. Shape (note `calendarName` is the internal name
+from step 3):
 
 ```json
 {
   "allowedSenders": ["chris@example.com", "chris.work@example.com"],
-  "calendarName": "AI-Chris",
+  "calendarName": "chris-ai",
   "labelName": "caltitude"
 }
 ```

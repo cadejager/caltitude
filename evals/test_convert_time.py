@@ -309,6 +309,36 @@ class ToZone(unittest.TestCase):
                 from_tz="America/Chicago", to_tz="Not/AZone",
             )
 
+    def test_none_zone_raises_valueerror_not_typeerror(self):
+        # Library-contract: a missing zone is a clean ValueError, never a
+        # TypeError from inside ZoneInfo/posixpath.
+        with self.assertRaises(ValueError):
+            convert_time.convert("2026-06-26 13:01", "to-zone")
+        with self.assertRaises(ValueError):
+            convert_time.convert("2026-06-26 13:01", "to-utc", None)
+
+
+class AddDays(unittest.TestCase):
+    """add-days shifts a YYYY-MM-DD date — for the exclusive all-day DTEND."""
+
+    def test_plus_one_day(self):
+        self.assertEqual(convert_time.add_days("2026-06-11", 1), "2026-06-12")
+
+    def test_crosses_month_boundary(self):
+        self.assertEqual(convert_time.add_days("2026-06-30", 1), "2026-07-01")
+
+    def test_crosses_year_and_leap(self):
+        self.assertEqual(convert_time.add_days("2028-02-28", 1), "2028-02-29")
+        self.assertEqual(convert_time.add_days("2026-12-31", 1), "2027-01-01")
+
+    def test_same_day_item_becomes_one_day_span(self):
+        # A same-day rental (pickup==dropoff 06-08) -> exclusive end 06-09.
+        self.assertEqual(convert_time.add_days("2026-06-08", 1), "2026-06-09")
+
+    def test_bad_date_raises(self):
+        with self.assertRaises(ValueError):
+            convert_time.add_days("not-a-date", 1)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

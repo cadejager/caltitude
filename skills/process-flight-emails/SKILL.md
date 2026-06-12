@@ -18,9 +18,16 @@ kept on the local filesystem except transient temp files.
 - **Config:** `.config/caltitude/config.json` — written by `setup-calendar-from-email`.
   Read it with `nc_webdav_read_file`. If it is missing/unreadable, tell the user to
   run setup first and **stop**. Fields: `allowedSenders` (lowercase exact
-  addresses), `calendarName`, `labelName` (default `caltitude`).
+  addresses), `calendarName` (the calendar's **internal `name`** from
+  `nc_calendar_list_calendars`, e.g. `chris-ai` — NOT its display name),
+  `labelName` (default `caltitude`).
 - **State:** `.local/state/caltitude/state.json` — `{ "lastRunISO": "..." }`. Read
-  with `nc_webdav_read_file`; treat "not found" as no prior run.
+  with `nc_webdav_read_file`; treat "not found" as no prior run. **Capture the run
+  timestamp at the very start (step 1)** and write it only **after** the run
+  succeeds (step 8) — never advance the cursor past mail that arrived mid-run or on
+  a run that was interrupted.
+- `nc_webdav_create_directory` is **not recursive** (it 409s if a parent is
+  missing) — create each path level in order before writing.
 
 ## Tools
 
@@ -38,11 +45,19 @@ read **exclusively** by the sandboxed `email-event-extractor` agent.
 ## Steps
 
 ### 1. Find candidate threads (incremental, IDs + From + snippet only)
+**First, capture `runStartISO` = now (UTC ISO)** — you will save this as the new
+cursor in step 8, but only after the run succeeds. Capturing it now (before the
+search) means mail that arrives during the run is picked up next time, not skipped.
+
 Resolve the `<labelName>` (default `caltitude`) label to its **ID** via
-`list_labels` (the `label:` operator needs the ID, not the name); `create_label`
-it if missing. Read `lastRunISO` from state.
+`list_labels` (the `label:` operator needs the ID, not the name; `list_labels`
+returns an empty result when no user labels exist). `create_label` it if missing.
+Read `lastRunISO` from state.
 - If `lastRunISO` is present: `search_threads` with
-  `q = in:inbox -label:<labelId> after:<epoch seconds of lastRunISO>`.
+  `q = in:inbox -label:<labelId> after:<YYYY/MM/DD of lastRunISO>` — the Gmail
+  `after:` operator takes a `YYYY/MM/DD` date (just reformat the date part of
+  `lastRunISO`; no epoch math). Date granularity is fine: the `-label:caltitude`
+  filter and archiving (step 7) already prevent any same-day reprocessing.
 - If there is **no state** (first run): `search_threads` with
   `q = in:inbox -label:<labelId>` (the whole inbox).
 
@@ -107,25 +122,35 @@ the report.
 ### 6. Create calendar events (`nc_calendar_create_event`, calendar = `calendarName`)
 **Flights** — anchored to the **departure timezone** (the connector accepts only one
 `timezone` per event):
-- `title`: `<flightLabel> <depAirport-code> <dep local_pretty> → <arrAirport-code> <arr local_pretty>`
-  e.g. `AA6296 SAF 10:08a MDT → DFW 1:01p CDT`.
+- `title`: `<flightLabel> <depAirport> <dep local_pretty> → <arrAirport> <arr local_pretty>`
+  e.g. `AA6296 SAF 10:08a MDT → DFW 1:01p CDT` (`depAirport`/`arrAirport` are bare
+  IATA codes).
 - `start_datetime`: naive `depLocalTime` (`YYYY-MM-DDTHH:MM:00`); `timezone`: `depTz`.
 - `end_datetime`: the **to-zone** `local_iso` naive datetime (arrival expressed in
   `depTz`); same `timezone`: `depTz`.
-- `location`: departure airport. `description`: the reader's `description` plus the
-  true local departure/arrival times and zones (keep full detail).
+- `location`: `depAirport`. `description`: the reader's `description` plus the true
+  local departure/arrival times and zones (keep full detail).
 - Reminder: `reminder_minutes: 180`, `reminder_email: false` (a popup before departure).
 
+> **All-day end dates are EXCLUSIVE.** Nextcloud renders an all-day event through
+> the day *before* `end_datetime`. So for the visible span to include the checkout
+> / dropoff day, set `end_datetime` to **one day after** the inclusive end date,
+> computed deterministically:
+> `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/convert_time.py add-days <date> --days 1`.
+> (This also makes a same-day item — check-in == checkout — a valid 1-day event.)
+
 **Hotels** — single multi-day **all-day** event:
-- `title`: `Hotel — <name> (<n> nights)` (compute nights from the dates).
-- `all_day: true`; `start_datetime`: `checkInDate`; `end_datetime`: `checkOutDate`.
+- `title`: `Hotel — <name> (<n> nights)` (compute nights = `checkOutDate − checkInDate`).
+- `all_day: true`; `start_datetime`: `checkInDate`;
+  `end_datetime`: `add-days(checkOutDate, 1)` (exclusive end, per the note above).
 - `location`: `address`. `description`: check-in/checkout **times**, confirmation,
   and the reader's `description`.
 - **No notification:** `reminder_minutes: 0`, `reminder_email: false`.
 
 **Cars** — single multi-day **all-day** event:
 - `title`: `Car — <company> (<pickup city/airport>)`.
-- `all_day: true`; `start_datetime`: `pickupDate`; `end_datetime`: `dropoffDate`.
+- `all_day: true`; `start_datetime`: `pickupDate`;
+  `end_datetime`: `add-days(dropoffDate, 1)` (exclusive end, per the note above).
 - `location`: `pickupAddress`. `description`: pickup/dropoff **date-times**, dropoff
   location, confirmation, and the reader's `description`.
 - **No notification:** `reminder_minutes: 0`, `reminder_email: false`.
@@ -139,9 +164,12 @@ For every email the plugin scheduled from:
   `labelIds: ["INBOX"]`.
 
 ### 8. Advance state
-Write `.local/state/caltitude/state.json` with `lastRunISO` = now (UTC ISO) via
-`nc_webdav_write_file` (create `.local/state/caltitude/` with
-`nc_webdav_create_directory` if needed).
+Now that the run has succeeded, write `.local/state/caltitude/state.json` with
+`lastRunISO` = the **`runStartISO`** you captured in step 1 (not a fresh "now")
+via `nc_webdav_write_file`. If the directory doesn't exist, create it **one level
+at a time** (`.local`, then `.local/state`, then `.local/state/caltitude`) — 
+`nc_webdav_create_directory` is not recursive. If the run failed partway, do
+**not** write state, so the next run re-scans from the old cursor.
 
 ### 9. Report
 Summarize: events created (flights / hotels / cars, with titles), and anything

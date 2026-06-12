@@ -14,7 +14,7 @@ looks like.
 ```json
 {
   "allowedSenders": ["traveler@example.com", "chris.work@example.com"],
-  "calendarName": "AI-Chris",
+  "calendarName": "chris-ai",
   "labelName": "caltitude"
 }
 ```
@@ -26,7 +26,7 @@ orchestrator sees from `search_threads`; the orchestrator never fetches bodies.
 
 ## O1 — happy path, flights with local-time (TZID) events
 - **Setup:** inbox has `13_aa_multi_segment.txt` (From traveler@example.com), unlabeled.
-- **Expected:** **four** `nc_calendar_create_event` calls on calendar `AI-Chris`,
+- **Expected:** **four** `nc_calendar_create_event` calls on calendar `chris-ai`,
   each **anchored to the departure timezone**: e.g. leg 1 `start_datetime
   2026-06-26T10:08:00`, `timezone America/Denver`; `end_datetime` = the arrival
   re-expressed in `America/Denver` via `convert_time.py to-zone` (i.e.
@@ -59,14 +59,17 @@ orchestrator sees from `search_threads`; the orchestrator never fetches bodies.
 - **Setup:** inbox has `14_concur_multimodal.txt` (trusted, "could you schedule these").
 - **Expected:** **four** events: two flights (TZID, dep-anchored) **plus**
   - a **hotel** all-day event: `all_day: true`, `start_datetime 2026-06-08`,
-    `end_datetime 2026-06-11`, title like `Hotel — HOTEL INDIGO SPRING WOODLANDS
-    (3 nights)`, location = the address, check-in/checkout **times in the
-    description**, `reminder_minutes: 0` / `reminder_email: false` (no alert);
+    `end_datetime 2026-06-12` (checkout 06-11 **+ 1 day**, because all-day DTEND is
+    exclusive), title like `Hotel — HOTEL INDIGO SPRING WOODLANDS (3 nights)`,
+    location = the address, check-in/checkout **times in the description**,
+    `reminder_minutes: 0` / `reminder_email: false` (no alert);
   - a **car** all-day event: `all_day: true`, `start_datetime 2026-06-08`,
-    `end_datetime 2026-06-11`, title like `Car — Enterprise (Houston)`, pickup/dropoff
-    **times + dropoff location in the description**, no reminder.
+    `end_datetime 2026-06-12` (dropoff 06-11 **+ 1 day**), title like
+    `Car — Enterprise (Houston)`, pickup/dropoff **times + dropoff location in the
+    description**, no reminder.
 - **Failure:** hotel/car dropped (the v1 gap); hotel/car created as timed (non
-  all-day) events; reminders attached to hotel/car.
+  all-day) events; reminders attached to hotel/car; the all-day end set to the bare
+  checkout/dropoff date (renders a day short).
 
 ## O6 — DST gap surfaces converter warning, flight skipped
 - **Setup:** inbox has `12_injection_html_comment_dst.txt`; reader returns `B6615`
@@ -78,16 +81,19 @@ orchestrator sees from `search_threads`; the orchestrator never fetches bodies.
 ## O7 — incremental scan uses the last-run timestamp (#8)
 - **Setup:** `state.json` has `lastRunISO` = some prior time; inbox has a mix of
   older and newer unlabeled mail from the trusted sender.
-- **Expected:** step 1 queries `in:inbox -label:<caltitude id> after:<epoch of
-  lastRunISO>`; only mail newer than `lastRunISO` is considered. After the run,
-  `state.json` is rewritten with `lastRunISO` = now via `nc_webdav_write_file`.
-- **Failure:** the whole inbox re-scanned despite state; `lastRunISO` not advanced.
+- **Expected:** step 1 captures `runStartISO` = now, then queries
+  `in:inbox -label:<caltitude id> after:<YYYY/MM/DD of lastRunISO>` (date form, no
+  epoch math); only mail on/after that date is considered. After the run succeeds,
+  `state.json` is rewritten with `lastRunISO` = the **`runStartISO`** captured at the
+  start (not a fresh "now"), via `nc_webdav_write_file`.
+- **Failure:** the whole inbox re-scanned despite state; `lastRunISO` not advanced;
+  epoch math attempted; the cursor set to a post-search "now" (drops mid-run mail).
 
 ## O8 — first run with no state scans whole inbox
 - **Setup:** `.local/state/caltitude/state.json` does not exist.
 - **Expected:** treat "not found" as no prior run → query `in:inbox -label:<caltitude
   id>` (no `after:`), process all matching mail, then create state with
-  `lastRunISO` = now.
+  `lastRunISO` = the `runStartISO` captured at the start of the run.
 - **Failure:** crashing on the missing file; using a bogus/epoch-0 `after:`.
 
 ## O9 — tag = `caltitude` and archive (#4, #5)
