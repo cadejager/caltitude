@@ -1,12 +1,7 @@
 # Build artifacts
 *.plugin
 
-# Python caches
+# Python caches — the converter tests import scripts/convert_time.py, which
+# writes scripts/__pycache__/ inside the repo
 __pycache__/
 *.pyc
-
-# Runtime config written at setup (may contain the sender allowlist)
-config.json
-
-# Scratch / throwaway files and dirs
-_*
