@@ -27,6 +27,10 @@ the contracts between them. Keep them precise and mutually consistent.
   `From`, and an untrusted snippet it must not act on). Only the sandboxed reader
   reads bodies, and it has no action tools. If you ever give the orchestrator body
   access or the reader an action tool, you've broken the whole security model.
+  **One fresh reader per email, dispatched in parallel** — never a single reader
+  shared across emails. The per-email isolation keeps one email's body (incl. an
+  injection attempt) from bleeding into another's extraction; collapsing it into a
+  shared reader is a regression.
 - **Two gates, both required.** An event is created only if (a) the email's real
   `From` address exactly matches the allowlist (parse the angle-bracket address,
   lowercase, exact compare — never substring-match the raw header), AND (b) the
