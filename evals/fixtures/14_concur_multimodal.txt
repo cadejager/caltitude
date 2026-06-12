@@ -1,0 +1,110 @@
+From: traveler@example.com
+Subject: Fwd: FW: Confirmation: Q3 Review, 06/08/2026 - 06/11/2026
+Date: 2026-06-09T21:24:22Z
+Message-Id: 19eae45babfa38e1
+
+--- PLAINTEXT BODY ---
+could you schedule these
+
+
+
+-------- Forwarded Message --------
+Subject: 	FW: Confirmation: Q3 Review, 06/08/2026 - 06/11/2026
+Date: 	Mon, 8 Jun 2026 19:35:28 +0000
+From: 	Alex Rivera <alex.rivera@example.com>
+To: 	traveler@example.com
+
+Trip Confirmation
+
+From: Concur Travel <noreply@concursolutions.com>
+Date: Thursday, May 14, 2026 at 16:51
+To: Alex Rivera <alex.rivera@example.com>
+Subject: Confirmation: Q3 Review, 06/08/2026 - 06/11/2026
+
+SAP Concur
+
+Trip Confirmation
+
+Trip Status: Confirmed
+Traveler: Alex Rivera
+Dates: 06/08/2026 - 06/11/2026
+Record Locator: ABC123
+
+Flight
+Status: Incomplete
+Confirmation: QRS456
+
+United Airlines
+
+06/08/2026
+Albuquerque, NM (ABQ) - Houston, TX (IAH)
+02:08 pm - 05:25 pm
+
+Confirmation: QRS456
+United Airlines • UA 3986
+Economy, ECONOMY
+Seat: ---
+
+Baggage Allowance
+1 carry-on bag included
+1st checked bag for USD 50.00 up to 23kg / 50lbs and 158cm / 62in
+
+Rental Car
+Status: Confirmed
+Confirmation: CAR-0000
+
+ENTERPRISE
+
+Pickup
+06/08/2026 06:00 pm
+HOUSTON GEO BUSH, 17300 PALMETTO PINES, HOUSTON, 77032-0000, US
+
+Drop-Off
+06/11/2026 10:00 am
+HOUSTON GEO BUSH, 17300 PALMETTO PINES, HOUSTON, 77032-0000, US
+
+Intermediate 2/4 Door- TOYOTA COROLLA
+  * Seats: 5
+  * Large Bags: 1
+  * Automatic transmission
+
+Booking Includes
+  * Unlimited Mileage
+  * Air Conditioning
+
+Hotel
+Status: Ready
+Property Confirmation: HTL-0000 | Provider Confirmation: HTL-0000
+
+HOTEL INDIGO SPRING WOODLANDS A
+
+650 BASILICA DRIVE SPRING TX 77386, SPRING, 77386, US
+
+3 Nights - 1 Guests
+
+1 KING STANDARD ROOM WITH MINIFRIDGE PER DIEM. HOTEL CXL POLICY.
+
+Check-in 06/08/2026 03:00 PM
+Checkout 06/11/2026 11:00 AM
+
+Cancellation Policy
+  * Free cancellation until 4:00PM on June 7, 2026.
+
+Flight
+Status: Incomplete
+Confirmation: QRS456
+
+United Airlines
+
+06/11/2026
+Houston, TX (IAH) - Albuquerque, NM (ABQ)
+10:00 am - 11:25 am
+
+Confirmation: QRS456
+United Airlines • UA 3982
+Economy, ECONOMY
+Seat: 21D
+
+Total Cost
+Flight USD 488.99
+Rental Car USD 208.22

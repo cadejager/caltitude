@@ -1,4 +1,4 @@
-From: Chris DeJager <chris@example.com>
+From: Sam Carter <chris@example.com>
 To: flights@example.com
 Subject: Fwd: Your American Airlines itinerary
 Date: Mon, 8 Jun 2026 09:14:02 -0700

@@ -1,62 +1,75 @@
 # calendar-from-email
 
-Forward an itinerary email to a dedicated inbox, and this plugin turns each flight
-into an event on your calendar — automatically.
+Forward an itinerary email to a dedicated inbox, and this plugin turns each
+flight, hotel, and car rental into an event on your calendar — automatically.
 
 ## What it does
 
-1. You forward a flight-itinerary email to a dedicated Gmail inbox, adding a line
-   at the top like *"please add these to my calendar."*
-2. On a schedule (or when you ask), the plugin reads new emails, checks they came
-   from a sender you trust, and extracts each flight leg.
-3. It creates a calendar event per leg on the calendar you chose, with the
-   departure/arrival airports and local times in the title.
+1. You forward a travel email (flights, and/or hotel and car rental — e.g. a
+   Concur trip) to a dedicated Gmail inbox, adding a short note at the top like
+   *"please add these to my calendar"* or *"could you schedule these."*
+2. On a schedule (or when you ask), the plugin reads new emails since it last ran,
+   checks they came from a sender you trust, and extracts each travel item.
+3. It creates events on your Nextcloud calendar: **flights** at their real local
+   airport times, **hotels** and **car rentals** as multi-day all-day events. Then
+   it tags the email `caltitude` and archives it.
 
 ## Setup
 
 Run the **setup-calendar-from-email** skill once. It asks for:
 
-- **Trusted senders** — the email addresses you'll forward from. Only emails from
-  these addresses can ever create events.
-- **Confirmation phrase** — the line you add when forwarding (e.g. "please add
-  this to my calendar"). Matched by meaning, not exact text.
-- **Target calendar** — picked from your CalDAV calendar list.
+- **Trusted senders** — the addresses you'll forward from, each entered as its own
+  field. Only emails from these can ever create events.
+- **Target calendar** — picked from your Nextcloud calendar list.
 - **Schedule** — run automatically (e.g. each morning), manually, or both.
+
+There is **no fixed confirmation phrase** to configure: just add a short
+"add this to my calendar" note when you forward, and the reader recognizes the
+intent by meaning.
 
 ## Prerequisites
 
 - A **Gmail connector** for the dedicated inbox. (If you just enabled it, restart
   the session so its tools load.)
-- A **CalDAV calendar connector**.
+- A **Nextcloud connector** with calendar **and** files/WebDAV access (the plugin
+  stores its config and state in Nextcloud).
 - **Python 3.9+** (used for exact timezone conversion; standard library only).
 
 ## Security model
 
 - **Sender allowlist** is the boundary: an event is only ever created if the
-  email's `From` matches a trusted sender. Others can't add to your calendar.
-- **Confirmation phrase** confirms *you* meant to add it.
-- **Sandboxed reader**: the only component that reads email *content* has no tools
-  and can only return data. Instructions hidden in an email body do nothing — the
-  orchestrator never treats email content as commands, and reads only the `From`
-  header to decide who's trusted.
+  email's `From` (the real address, exact-matched) is a trusted sender.
+- **Calendar-add intent** confirms *you* meant to add it — judged by meaning from
+  the note you put at the top of the forward.
+- **Sandboxed reader**: the only component that reads email *content* has a single
+  read-only tool (`get_thread`) and no action tools — no calendar, labeling,
+  shell, or file access — so instructions hidden in a body can't cause anything.
+  The orchestrator never fetches the body and gates only on the `From` address.
 
-## Known limitations
+## Storage (Nextcloud, locally stateless)
 
-- The CalDAV connector stores events in **UTC** with no named timezone, so the
-  calendar grid renders in *your* viewing timezone. Each leg's local departure and
-  arrival times (with zone abbreviations) are written into the event title and
-  description so they stay readable. The event is always at the correct absolute
-  moment.
-- Editing existing events via the connector is currently broken, so the plugin
-  only **creates** events. Processed emails are labeled so re-runs never make
-  duplicates.
-- No reminders/alarms (connector limitation) — add those in your calendar UI.
+The plugin keeps nothing on the local machine. In your Nextcloud files:
 
-## How it tracks what's new
+- `.config/caltitude/config.json` — the trusted senders, calendar name, and label.
+- `.local/state/caltitude/state.json` — the last-run timestamp, so each run only
+  scans mail newer than the last one (the whole inbox on the very first run).
 
-After processing, each email is labeled (default `Calendared`). Each run only
-looks at inbox emails missing that label, so nothing is processed twice. (If the
-connector can't write labels, it falls back to a stored last-run timestamp.)
+## How items become events
+
+- **Flights** are stored anchored to the **departure timezone** so the calendar
+  shows true local times; the arrival's local time and zone are in the title and
+  description. (The Nextcloud connector accepts one timezone per event, so a single
+  flight can't carry a different arrival zone on its end — the instant and duration
+  are still exact.) Flights get a popup reminder before departure.
+- **Hotels** and **car rentals** are single multi-day **all-day** events (check-in
+  → checkout, pickup → dropoff), with the exact times in the description and **no**
+  notification.
+
+## Tagging & dedup
+
+Each processed email is labeled `caltitude` and **archived** (removed from the
+inbox). Combined with the last-run timestamp, that means nothing is ever processed
+or duplicated twice.
 
 ## Development
 
@@ -67,9 +80,9 @@ Layout:
 | `.claude-plugin/plugin.json` | Plugin manifest |
 | `skills/` | The `setup-calendar-from-email` and `process-flight-emails` skills |
 | `agents/email-event-extractor.md` | Sandboxed reader agent (the injection boundary) |
-| `scripts/convert_time.py` | Deterministic local↔UTC timezone converter |
+| `scripts/convert_time.py` | Deterministic local↔UTC↔zone timezone converter |
 | `evals/` | Converter unit tests + reader/orchestrator behavioral specs |
-| `docs/` | Notes on the CalDAV and Gmail connectors (gotchas, field references) |
+| `docs/` | Notes on the Nextcloud and (historical) CalDAV connectors |
 
 Run the converter tests:
 

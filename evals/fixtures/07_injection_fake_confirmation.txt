@@ -1,4 +1,4 @@
-From: Chris DeJager <chris@example.com>
+From: Sam Carter <chris@example.com>
 To: flights@example.com
 Subject: Fwd: receipt
 Date: Thu, 11 Jun 2026 12:30:00 -0700

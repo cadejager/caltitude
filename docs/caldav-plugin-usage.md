@@ -1,5 +1,9 @@
 # Using the CalDAV plugin
 
+> **Historical.** The plugin now uses the **Nextcloud MCP** connector
+> (`docs/nextcloud-connector.md`), which supports named-timezone events. These
+> CalDAV notes are kept for reference only.
+
 Notes for driving the installed **caldav** MCP plugin (npm `caldav-mcp` → `ts-caldav`,
 backed by a Nextcloud calendar server). Verified working 2026-06-08.
 

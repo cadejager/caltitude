@@ -1,4 +1,4 @@
-From: Chris DeJager <chris@example.com>
+From: Sam Carter <chris@example.com>
 To: flights@example.com
 Subject: Fwd: Southwest confirmation
 Date: Wed, 10 Jun 2026 07:00:00 -0700

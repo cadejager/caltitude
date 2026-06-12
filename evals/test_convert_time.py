@@ -246,5 +246,69 @@ class DateOnlyInput(unittest.TestCase):
         self.assertFalse(f("now"))
 
 
+class ToZone(unittest.TestCase):
+    """to-zone: re-express a wall-clock from one zone into another.
+
+    Used to anchor a flight's arrival end to its departure zone so one event can
+    carry a single TZID. The instant must be preserved; only the wall-clock
+    representation changes.
+    """
+
+    def test_arrival_central_reexpressed_in_mountain(self):
+        # 1:01pm Central is the same instant as 12:01pm Mountain (18:01Z).
+        out = convert_time.convert(
+            "2026-06-26 13:01", "to-zone",
+            from_tz="America/Chicago", to_tz="America/Denver",
+        )
+        self.assertEqual(out["local_iso"], "2026-06-26T12:01:00-06:00")
+        self.assertEqual(out["result_utc"], "2026-06-26T18:01:00+00:00")
+        self.assertEqual(out["local_pretty"], "12:01p MDT")
+        self.assertEqual(out["tz"], "America/Denver")
+        self.assertIsNone(out["warning"])
+
+    def test_instant_preserved_across_reexpression(self):
+        # Re-expressing must not move the absolute instant.
+        as_utc = convert_time.convert(
+            "2026-06-08 17:25", "to-utc", "America/Chicago"
+        )["result_utc"]
+        as_zone = convert_time.convert(
+            "2026-06-08 17:25", "to-zone",
+            from_tz="America/Chicago", to_tz="America/Denver",
+        )["result_utc"]
+        self.assertEqual(as_utc, as_zone)
+
+    def test_same_from_and_to_is_identity_wallclock(self):
+        out = convert_time.convert(
+            "2026-06-26 10:08", "to-zone",
+            from_tz="America/Denver", to_tz="America/Denver",
+        )
+        self.assertEqual(out["local_iso"], "2026-06-26T10:08:00-06:00")
+
+    def test_offset_input_ignores_from_zone(self):
+        # An input carrying its own offset fixes the instant; --from is moot.
+        out = convert_time.convert(
+            "2026-06-26T13:01:00-05:00", "to-zone",
+            from_tz="America/New_York", to_tz="America/Denver",
+        )
+        self.assertEqual(out["result_utc"], "2026-06-26T18:01:00+00:00")
+        self.assertEqual(out["local_iso"], "2026-06-26T12:01:00-06:00")
+
+    def test_dst_gap_in_source_zone_is_flagged(self):
+        # A nonexistent spring-forward wall-clock in the SOURCE zone warns.
+        out = convert_time.convert(
+            "2026-03-08 02:30", "to-zone",
+            from_tz="America/New_York", to_tz="America/Chicago",
+        )
+        self.assertIsNotNone(out["warning"])
+        self.assertIn("nonexistent", out["warning"])
+
+    def test_unknown_target_zone_raises(self):
+        with self.assertRaises(ValueError):
+            convert_time.convert(
+                "2026-06-26 13:01", "to-zone",
+                from_tz="America/Chicago", to_tz="Not/AZone",
+            )
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

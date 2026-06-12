@@ -1,0 +1,48 @@
+{
+  "confirmationPhrasePresent": true,
+  "flights": [
+    {
+      "flightLabel": "UA3986",
+      "depAirport": "ABQ",
+      "depLocalTime": "2026-06-08 14:08",
+      "depTz": "America/Denver",
+      "arrAirport": "IAH",
+      "arrLocalTime": "2026-06-08 17:25",
+      "arrTz": "America/Chicago"
+    },
+    {
+      "flightLabel": "UA3982",
+      "depAirport": "IAH",
+      "depLocalTime": "2026-06-11 10:00",
+      "depTz": "America/Chicago",
+      "arrAirport": "ABQ",
+      "arrLocalTime": "2026-06-11 11:25",
+      "arrTz": "America/Denver"
+    }
+  ],
+  "hotels": [
+    {
+      "name": "HOTEL INDIGO SPRING WOODLANDS",
+      "address": "650 BASILICA DRIVE SPRING TX 77386",
+      "checkInDate": "2026-06-08",
+      "checkInTime": "15:00",
+      "checkOutDate": "2026-06-11",
+      "checkOutTime": "11:00",
+      "confirmation": "HTL-0000",
+      "description": "1 King standard room with minifridge, 3 nights"
+    }
+  ],
+  "cars": [
+    {
+      "company": "Enterprise",
+      "pickupAddress": "HOUSTON GEO BUSH, 17300 PALMETTO PINES, HOUSTON, 77032-0000, US",
+      "dropoffAddress": "HOUSTON GEO BUSH, 17300 PALMETTO PINES, HOUSTON, 77032-0000, US",
+      "pickupDate": "2026-06-08",
+      "pickupTime": "18:00",
+      "dropoffDate": "2026-06-11",
+      "dropoffTime": "10:00",
+      "confirmation": "CAR-0000",
+      "description": "Intermediate 2/4 door, Toyota Corolla, automatic"
+    }
+  ]
+}

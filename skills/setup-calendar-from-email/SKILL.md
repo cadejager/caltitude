@@ -1,6 +1,6 @@
 ---
 name: setup-calendar-from-email
-description: First-time setup for the calendar-from-email plugin. Use when the user wants to set up, configure, or initialize automatic calendar events from forwarded emails — collecting allowed sender addresses, the confirmation phrase, the target calendar, and the run schedule. Triggers include "set up calendar from email", "configure the flight email plugin", "set up forwarding to my calendar".
+description: First-time setup for the calendar-from-email plugin. Use when the user wants to set up, configure, or initialize automatic calendar events from forwarded emails — collecting allowed sender addresses, the target Nextcloud calendar, and the run schedule. Triggers include "set up calendar from email", "configure the flight email plugin", "set up forwarding to my calendar".
 ---
 
 # Set up calendar-from-email
@@ -13,81 +13,72 @@ will do.
 ## Prerequisites to confirm first
 
 1. A **Gmail connector** is connected (the dedicated inbox the user forwards to).
-   If a Gmail connector was just enabled, it only loads in a **new session** —
-   tell the user to restart the session if Gmail tools aren't available.
-2. A **CalDAV calendar connector** is connected.
+   If it was just enabled, it only loads in a **new session** — tell the user to
+   restart the session if Gmail tools aren't available.
+2. A **Nextcloud connector** is connected, with **calendar** and **files/WebDAV**
+   access (the plugin stores its config and state in Nextcloud).
 3. **Python 3.9+** is available (used for timezone conversion; stdlib only).
 
 If any is missing, stop and tell the user what to connect before continuing.
 
 ## Steps
 
-### 1. Collect the sender allowlist
-Ask which email addresses the user will forward from. Explain: only emails whose
-`From` matches this list will ever create calendar events — this is the security
-boundary that stops other people from adding to the calendar. Accept several
-addresses.
+### 1. Collect the sender allowlist (list interface)
+Only emails whose `From` matches this list will ever create calendar events — this
+is the security boundary that stops other people from adding to the calendar.
 
-Store each entry as a **bare, full email address** (e.g. `chris@example.com`) —
-no display name, no angle brackets. These are compared **exactly** at run time:
-`process-flight-emails` parses the real angle-bracket address out of the `From`
-header, lowercases it, and checks it is identical to an allowlist entry. So:
-- Store addresses **lowercase** (local part and domain both compared
-  case-insensitively; store them lowercased so the compare is exact).
-- Store the **full address including any `+` alias** (e.g.
-  `chris+flights@example.com`). Aliases are matched as-is — `chris@example.com`
-  and `chris+flights@example.com` are different entries; add both if both are used.
-- A display-name match never counts. `"chris@example.com" <attacker@evil.com>`
-  is rejected because only `attacker@evil.com` (the real address) is compared.
+Present a **list-style form** so each address is its own field: render an
+elicitation widget with `mcp__visualize__show_widget` (`elicitation` module)
+containing a repeatable list of email inputs with an "add another" control, plus
+fields for the target calendar and schedule (steps 3 and 5). Submit the form back
+with `sendPrompt`. If the widget is unavailable, fall back to asking in plain text
+and accept several addresses.
 
-### 2. Collect the confirmation phrase(s)
-Ask what phrase they'll put at the top of a forward to confirm intent (e.g.
-"please add this to my calendar", "put these flights on my calendar"). Store one
-or more phrases in `confirmationPhrases`. These are not decorative: on every run
-`process-flight-emails` passes this exact list into the sandboxed reader's
-dispatch prompt, and the reader decides `confirmationPhrasePresent` by judging
-the forwarder's intro line **against these phrases**. Matching is by **meaning**
-(close paraphrases count), but it is **seeded from the user's phrases**, not a
-hardcoded example — so what the user types here is what actually drives the gate.
-Record one or more phrases.
+Store each entry as a **bare, full, lowercase email address** (no display name, no
+angle brackets). At run time `process-flight-emails` parses the real angle-bracket
+address out of `From`, lowercases it, and checks exact equality. Notes:
+- Include any `+` alias in full (`chris+flights@example.com` is its own entry).
+- A display-name match never counts (`"chris@example.com" <attacker@evil.com>` is
+  rejected — only the real address `attacker@evil.com` is compared).
+
+### 2. Confirmation intent (no setup needed)
+There is **no** confirmation phrase to configure. When forwarding, the user just
+adds a short note near the top asking to calendar the trip ("add to calendar",
+"could you schedule these", etc.); the reader judges that intent by meaning. Tell
+the user this is how to trigger scheduling — nothing to enter here.
 
 ### 3. Choose the target calendar
-Call the CalDAV `list-calendars` tool. Show the human-readable calendar names and
-ask which one to use (the one shared back to the user, e.g. "AI-Chris"). Store the
-chosen calendar's URL **with the `/remote.php/dav` prefix stripped** — e.g. store
-`/calendars/AI/chris-ai/`, never `/remote.php/dav/calendars/AI/chris-ai/`. Passing
-the unstripped URL makes every event call fail.
+Call `nc_calendar_list_calendars`. Show the calendar names and ask which to use
+(the one shared back to the user, e.g. `AI-Chris`). Store the chosen **calendar
+name** as `calendarName` (the Nextcloud connector takes a name, not a URL).
 
-### 4. Probe Gmail capabilities
-Confirm the connector can list/search messages and add a label. List labels;
-if a label named `Calendared` (or the user's chosen name) doesn't exist, note it
-will be created on first run. Set `trackingMode` to `label` if labels work,
-otherwise fall back to `timestamp` and record `lastRunISO` as now.
+### 4. Probe Gmail labeling
+Confirm the connector can list/search messages and add a label (`list_labels`). The
+plugin uses a label named **`caltitude`** (created on first run if absent) and
+archives each processed email. No tracking-mode choice is needed.
 
 ### 5. Choose how it runs
 Ask: scheduled, manual, or both.
-- If scheduled, set up a recurring task (use the available scheduling mechanism —
-  e.g. the `schedule` skill / scheduled-tasks tool) that runs the
-  `process-flight-emails` skill on the chosen cadence (default: every morning).
-- Always keep manual runs available regardless.
+- If scheduled, set up a recurring task (the available scheduling mechanism) that
+  runs `process-flight-emails` on the chosen cadence (default: every morning).
+- Manual runs are always available regardless.
 
-### 6. Write the config file
-Write a JSON config to a stable, writable location (default
-`~/.config/calendar-from-email/config.json`; create the directory if needed).
-Shape:
+### 6. Write the config to Nextcloud
+Write the config JSON to **`.config/caltitude/config.json`** in Nextcloud via
+`nc_webdav_write_file` (create `.config/caltitude/` with
+`nc_webdav_create_directory` first if needed). Nothing is written to the local
+filesystem. Shape:
 
 ```json
 {
   "allowedSenders": ["chris@example.com", "chris.work@example.com"],
-  "confirmationPhrases": ["please add this to my calendar"],
-  "calendarUrl": "/calendars/AI/chris-ai/",
-  "trackingMode": "label",
-  "labelName": "Calendared",
-  "lastRunISO": "2026-06-08T00:00:00Z"
+  "calendarName": "AI-Chris",
+  "labelName": "caltitude"
 }
 ```
 
 ### 7. Confirm
-Summarize in plain language what was configured: which senders are trusted, the
-confirmation phrase, which calendar events go to, and the schedule. Offer a test:
-forward one itinerary, then run `process-flight-emails`.
+Summarize in plain language: which senders are trusted, that forwarding with a
+short "add to my calendar" note triggers it, which calendar events go to, that
+processed emails get the `caltitude` label and are archived, and the schedule.
+Offer a test: forward one itinerary, then run `process-flight-emails`.

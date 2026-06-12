@@ -5,9 +5,11 @@ Gmail stores per-field timestamps in UTC, but email bodies and human requests
 usually talk in local time. This helper does the conversion both directions so
 an agent never has to do timezone math in its head.
 
-Two directions:
+Three directions:
   to-utc     local wall-clock time  ->  UTC   (default)
   to-local   UTC time               ->  a local timezone
+  to-zone    a wall-clock in one zone -> the same instant in another zone
+             (used to anchor a flight's arrival end to its departure zone)
 
 The input time can be:
   * an ISO-8601 string            e.g. "2026-06-08 14:30", "2026-06-08T14:30:00"
@@ -29,6 +31,11 @@ Examples
 
   # Machine-readable output for piping into other tools
   python convert_time.py to-utc "2026-06-08 14:30" --tz Europe/Berlin --json
+
+  # Arrival 1:01pm Central, re-expressed in the departure (Mountain) zone so a
+  # single calendar event can carry one TZID for both ends:
+  python convert_time.py to-zone "2026-06-26 13:01" --from America/Chicago \
+      --to America/Denver
 """
 
 from __future__ import annotations
@@ -158,9 +165,14 @@ def dst_warning(dt: datetime, zone: ZoneInfo) -> str | None:
     return None
 
 
-def convert(value: str, direction: str, tz_name: str) -> dict:
+def convert(
+    value: str,
+    direction: str,
+    tz_name: str = "UTC",
+    from_tz: str | None = None,
+    to_tz: str | None = None,
+) -> dict:
     dt, had_offset = parse_input_time(value)
-    zone = load_zone(tz_name)
     warning = None
 
     # Flag a date-only input regardless of direction. We still convert (to local
@@ -173,28 +185,44 @@ def convert(value: str, direction: str, tz_name: str) -> dict:
             "do NOT trust this instant, supply a time of day"
         )
 
-    if direction == "to-utc":
+    if direction == "to-zone":
+        # Re-express a wall-clock from one zone into another (same instant).
+        src = load_zone(from_tz)
+        out_zone = load_zone(to_tz)
+        out_tz = to_tz
         if not had_offset:
-            # Interpret a bare wall-clock time as being in --tz.
-            dt = dt.replace(tzinfo=zone)
+            # Interpret a bare wall-clock as being in the SOURCE zone; that is
+            # where any DST ambiguity lives.
+            dt = dt.replace(tzinfo=src)
             if warning is None:
-                warning = dst_warning(dt, zone)
-        result = dt.astimezone(timezone.utc)
-        # The local side of a to-utc conversion is the input zone itself.
-        local = dt.astimezone(zone)
-    elif direction == "to-local":
-        if not had_offset:
-            # A bare time with no offset is assumed to already be UTC.
-            dt = dt.replace(tzinfo=timezone.utc)
-        result = dt.astimezone(zone)
+                warning = dst_warning(dt, src)
+        result = dt.astimezone(out_zone)
         local = result
-    else:  # pragma: no cover - argparse restricts choices
-        raise ValueError(f"Unknown direction: {direction}")
+    else:
+        zone = load_zone(tz_name)
+        out_tz = tz_name
+        if direction == "to-utc":
+            if not had_offset:
+                # Interpret a bare wall-clock time as being in --tz.
+                dt = dt.replace(tzinfo=zone)
+                if warning is None:
+                    warning = dst_warning(dt, zone)
+            result = dt.astimezone(timezone.utc)
+            # The local side of a to-utc conversion is the input zone itself.
+            local = dt.astimezone(zone)
+        elif direction == "to-local":
+            if not had_offset:
+                # A bare time with no offset is assumed to already be UTC.
+                dt = dt.replace(tzinfo=timezone.utc)
+            result = dt.astimezone(zone)
+            local = result
+        else:  # pragma: no cover - argparse restricts choices
+            raise ValueError(f"Unknown direction: {direction}")
 
     return {
         "input": value,
         "direction": direction,
-        "tz": tz_name,
+        "tz": out_tz,
         "interpreted_as": dt.isoformat(),
         "result": result.isoformat(),
         "result_utc": result.astimezone(timezone.utc).isoformat(),
@@ -213,8 +241,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "direction",
-        choices=["to-utc", "to-local"],
-        help="to-utc: local -> UTC.  to-local: UTC -> local.",
+        choices=["to-utc", "to-local", "to-zone"],
+        help="to-utc: local -> UTC.  to-local: UTC -> local.  "
+        "to-zone: re-express a wall-clock from --from into --to (same instant).",
     )
     parser.add_argument(
         "time",
@@ -225,7 +254,18 @@ def main(argv: list[str] | None = None) -> int:
         default="UTC",
         help="IANA timezone for the local side (default: UTC). "
         "For to-utc it's the input's zone; for to-local it's the output's zone. "
-        "Ignored when the input string already carries a UTC offset.",
+        "Ignored when the input string already carries a UTC offset. "
+        "Not used by to-zone (use --from/--to).",
+    )
+    parser.add_argument(
+        "--from",
+        dest="from_tz",
+        help="to-zone only: IANA source zone the wall-clock is written in.",
+    )
+    parser.add_argument(
+        "--to",
+        dest="to_tz",
+        help="to-zone only: IANA target zone to re-express the instant in.",
     )
     parser.add_argument(
         "--json",
@@ -234,8 +274,13 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
+    if args.direction == "to-zone" and not (args.from_tz and args.to_tz):
+        sys.exit("to-zone requires both --from and --to IANA timezones.")
+
     try:
-        out = convert(args.time, args.direction, args.tz)
+        out = convert(
+            args.time, args.direction, args.tz, args.from_tz, args.to_tz
+        )
     except ValueError as exc:
         sys.exit(str(exc))
 
