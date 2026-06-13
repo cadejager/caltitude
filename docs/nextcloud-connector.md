@@ -8,8 +8,8 @@ connector (see `caldav-plugin-usage.md`, now historical).
 > repo-root `.mcp.json` (server `Nextcloud_MCP`, launched via
 > `scripts/run-nextcloud-mcp.sh`). Credentials come from the plugin's `userConfig`
 > (`plugin.json`): `nextcloud_host`, `nextcloud_username`, and the `sensitive`
-> `nextcloud_app_password` (stored in the OS keychain), injected into the server's
-> env via `${user_config.*}`. Because the server is part of the plugin, it loads
+> `nextcloud_password` (stored in the OS keychain), injected into the server's
+> env via `${user_config.*}`. These mirror the server author's `mcpb/manifest.json`. Because the server is part of the plugin, it loads
 > **wherever the plugin's skill runs — including scheduled tasks** (a desktop
 > `.mcpb` extension does *not*, which is why scheduled runs failed before). Requires
 > `uv`/`uvx` on the machine. If you previously installed the Nextcloud **desktop

@@ -18,7 +18,7 @@
       "title": "Nextcloud username",
       "required": true
     },
-    "nextcloud_app_password": {
+    "nextcloud_password": {
       "type": "string",
       "title": "Nextcloud app password",
       "description": "Create one in Nextcloud → Settings → Security → Devices & sessions. Not your login password.",
