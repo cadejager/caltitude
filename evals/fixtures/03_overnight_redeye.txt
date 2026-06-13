@@ -1,4 +1,4 @@
-From: Chris DeJager <chris@example.com>
+From: Sam Carter <sam@example.com>
 To: flights@example.com
 Subject: Fwd: Red-eye home
 Date: Fri, 14 Aug 2026 22:05:00 -0700

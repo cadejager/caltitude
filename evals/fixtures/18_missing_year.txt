@@ -1,0 +1,21 @@
+From: Sam Carter <sam@example.com>
+Subject: Fwd: Alaska Airlines confirmation
+Date: 2026-06-20T14:00:00Z
+----- BODY -----
+add to calendar
+
+
+
+-------- Forwarded Message --------
+From: Alaska Airlines <confirmation@alaskaair.com>
+Subject: Your trip is confirmed
+
+Confirmation code: RSTUVW
+
+Depart: Fri, Jul 10
+AS 318
+SEA  Seattle        6:45 AM
+DEN  Denver         9:55 AM
+
+(The airline email omits the year on the segment; the message itself was sent
+in June 2026.)

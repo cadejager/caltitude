@@ -1,0 +1,16 @@
+{
+  "confirmationPhrasePresent": true,
+  "flights": [
+    {
+      "flightLabel": "AA200",
+      "depAirport": "SFO",
+      "depLocalTime": "2026-09-15 07:00",
+      "depTz": "America/Los_Angeles",
+      "arrAirport": "ORD",
+      "arrLocalTime": "2026-09-15 13:10",
+      "arrTz": "America/Chicago"
+    }
+  ],
+  "hotels": [],
+  "cars": []
+}

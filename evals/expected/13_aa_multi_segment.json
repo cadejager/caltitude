@@ -1,0 +1,43 @@
+{
+  "confirmationPhrasePresent": true,
+  "flights": [
+    {
+      "flightLabel": "AA6296",
+      "depAirport": "SAF",
+      "depLocalTime": "2026-06-26 10:08",
+      "depTz": "America/Denver",
+      "arrAirport": "DFW",
+      "arrLocalTime": "2026-06-26 13:01",
+      "arrTz": "America/Chicago"
+    },
+    {
+      "flightLabel": "AA1682",
+      "depAirport": "DFW",
+      "depLocalTime": "2026-06-26 15:18",
+      "depTz": "America/Chicago",
+      "arrAirport": "CLE",
+      "arrLocalTime": "2026-06-26 19:00",
+      "arrTz": "America/New_York"
+    },
+    {
+      "flightLabel": "AA6379",
+      "depAirport": "TVC",
+      "depLocalTime": "2026-07-11 14:38",
+      "depTz": "America/Detroit",
+      "arrAirport": "ORD",
+      "arrLocalTime": "2026-07-11 15:13",
+      "arrTz": "America/Chicago"
+    },
+    {
+      "flightLabel": "AA6210",
+      "depAirport": "ORD",
+      "depLocalTime": "2026-07-11 18:59",
+      "depTz": "America/Chicago",
+      "arrAirport": "SAF",
+      "arrLocalTime": "2026-07-11 21:08",
+      "arrTz": "America/Denver"
+    }
+  ],
+  "hotels": [],
+  "cars": []
+}

@@ -1,0 +1,33 @@
+[This fixture represents a single Gmail THREAD with three messages, as get_thread
+would return them. Only the middle message is the itinerary forward.]
+
+===== Message 1 of 3 =====
+From: Sam Carter <sam@example.com>
+Date: 2026-09-28T18:00:00Z
+Subject: trip next week
+Body:
+Hey — really looking forward to the trip next week! Booking the flights now.
+
+===== Message 2 of 3 (messageId: m-itinerary) =====
+From: Sam Carter <sam@example.com>
+Date: 2026-09-29T16:00:00Z
+Subject: Fwd: Delta itinerary (JFK-LAX)
+Body:
+please add this to my calendar
+
+-------- Forwarded Message --------
+From: Delta Air Lines <itinerary@delta.com>
+Confirmation: DLTA88
+
+Thursday, October 1, 2026
+DL 100
+JFK  New York        8:00 AM
+LAX  Los Angeles     11:30 AM
+Seat: 7A
+
+===== Message 3 of 3 =====
+From: Sam Carter <sam@example.com>
+Date: 2026-09-29T16:05:00Z
+Subject: Re: Fwd: Delta itinerary (JFK-LAX)
+Body:
+Thanks! That's the one.

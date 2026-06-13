@@ -1,0 +1,105 @@
+From: traveler@example.com
+Subject: Fwd: Your trip confirmation (SAF - CLE)
+Date: 2026-06-09T02:34:17Z
+----- BODY -----
+add to calendar
+
+
+
+-------- Forwarded Message --------
+Subject: 	Your trip confirmation (SAF - CLE)
+Date: 	Wed, 03 Jun 2026 00:11:46 +0000 (UTC)
+From: 	American Airlines <no-reply@info.email.aa.com>
+To: 	traveler@example.com
+
+
+
+American Airlines
+Here's your new itinerary
+
+Issued: June 3, 2026
+Your trip confirmation and receipt
+You can check in via the American app 24 hours before your trip.
+
+Confirmation code: XYZ789
+
+Friday, June 26, 2026
+
+airplane
+
+SAF
+Santa Fe
+10:08 AM
+
+AA 6296
+
+Operated by SkyWest Airlines as American Eagle
+
+destination
+DFW
+Dallas/Fort Worth
+1:01 PM
+
+Seat: 15A
+Class: Economy (G)
+
+airplane
+
+DFW
+Dallas/Fort Worth
+3:18 PM
+
+AA 1682
+
+destination
+CLE
+Cleveland
+7:00 PM
+
+Seat: 24F
+Class: Economy (G)
+
+Saturday, July 11, 2026
+
+airplane
+
+TVC
+Traverse City
+2:38 PM
+
+AA 6379
+
+Operated by SkyWest Airlines as American Eagle
+
+destination
+ORD
+Chicago O'Hare
+3:13 PM
+
+Class: Economy (L)
+
+airplane
+
+ORD
+Chicago O'Hare
+6:59 PM
+
+AA 6210
+
+Operated by SkyWest Airlines as American Eagle
+
+destination
+SAF
+Santa Fe
+9:08 PM
+
+Class: Economy (L)
+
+Manage your trip
+
+Bag information
+Checked Bag (Airport)
+1st bag 	$50.00
+2nd bag 	$60.00
+
+Taxes are included, when applicable.

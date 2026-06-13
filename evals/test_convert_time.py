@@ -246,5 +246,170 @@ class DateOnlyInput(unittest.TestCase):
         self.assertFalse(f("now"))
 
 
+class ToZone(unittest.TestCase):
+    """to-zone: re-express a wall-clock from one zone into another.
+
+    Used to anchor a flight's arrival end to its departure zone so one event can
+    carry a single TZID. The instant must be preserved; only the wall-clock
+    representation changes.
+    """
+
+    def test_arrival_central_reexpressed_in_mountain(self):
+        # 1:01pm Central is the same instant as 12:01pm Mountain (18:01Z).
+        out = convert_time.convert(
+            "2026-06-26 13:01", "to-zone",
+            from_tz="America/Chicago", to_tz="America/Denver",
+        )
+        self.assertEqual(out["local_iso"], "2026-06-26T12:01:00-06:00")
+        self.assertEqual(out["result_utc"], "2026-06-26T18:01:00+00:00")
+        self.assertEqual(out["local_pretty"], "12:01p MDT")
+        self.assertEqual(out["tz"], "America/Denver")
+        self.assertIsNone(out["warning"])
+
+    def test_instant_preserved_across_reexpression(self):
+        # Re-expressing must not move the absolute instant.
+        as_utc = convert_time.convert(
+            "2026-06-08 17:25", "to-utc", "America/Chicago"
+        )["result_utc"]
+        as_zone = convert_time.convert(
+            "2026-06-08 17:25", "to-zone",
+            from_tz="America/Chicago", to_tz="America/Denver",
+        )["result_utc"]
+        self.assertEqual(as_utc, as_zone)
+
+    def test_same_from_and_to_is_identity_wallclock(self):
+        out = convert_time.convert(
+            "2026-06-26 10:08", "to-zone",
+            from_tz="America/Denver", to_tz="America/Denver",
+        )
+        self.assertEqual(out["local_iso"], "2026-06-26T10:08:00-06:00")
+
+    def test_offset_input_ignores_from_zone(self):
+        # An input carrying its own offset fixes the instant; --from is moot.
+        out = convert_time.convert(
+            "2026-06-26T13:01:00-05:00", "to-zone",
+            from_tz="America/New_York", to_tz="America/Denver",
+        )
+        self.assertEqual(out["result_utc"], "2026-06-26T18:01:00+00:00")
+        self.assertEqual(out["local_iso"], "2026-06-26T12:01:00-06:00")
+
+    def test_dst_gap_in_source_zone_is_flagged(self):
+        # A nonexistent spring-forward wall-clock in the SOURCE zone warns.
+        out = convert_time.convert(
+            "2026-03-08 02:30", "to-zone",
+            from_tz="America/New_York", to_tz="America/Chicago",
+        )
+        self.assertIsNotNone(out["warning"])
+        self.assertIn("nonexistent", out["warning"])
+
+    def test_unknown_target_zone_raises(self):
+        with self.assertRaises(ValueError):
+            convert_time.convert(
+                "2026-06-26 13:01", "to-zone",
+                from_tz="America/Chicago", to_tz="Not/AZone",
+            )
+
+    def test_none_zone_raises_valueerror_not_typeerror(self):
+        # Library-contract: a missing zone is a clean ValueError, never a
+        # TypeError from inside ZoneInfo/posixpath.
+        with self.assertRaises(ValueError):
+            convert_time.convert("2026-06-26 13:01", "to-zone")
+        with self.assertRaises(ValueError):
+            convert_time.convert("2026-06-26 13:01", "to-utc", None)
+
+
+class AddDays(unittest.TestCase):
+    """add-days shifts a YYYY-MM-DD date — for the exclusive all-day DTEND."""
+
+    def test_plus_one_day(self):
+        self.assertEqual(convert_time.add_days("2026-06-11", 1), "2026-06-12")
+
+    def test_crosses_month_boundary(self):
+        self.assertEqual(convert_time.add_days("2026-06-30", 1), "2026-07-01")
+
+    def test_crosses_year_and_leap(self):
+        self.assertEqual(convert_time.add_days("2028-02-28", 1), "2028-02-29")
+        self.assertEqual(convert_time.add_days("2026-12-31", 1), "2027-01-01")
+
+    def test_same_day_item_becomes_one_day_span(self):
+        # A same-day rental (pickup==dropoff 06-08) -> exclusive end 06-09.
+        self.assertEqual(convert_time.add_days("2026-06-08", 1), "2026-06-09")
+
+    def test_bad_date_raises(self):
+        with self.assertRaises(ValueError):
+            convert_time.add_days("not-a-date", 1)
+
+    def test_negative_crosses_month_leap_aware(self):
+        self.assertEqual(convert_time.add_days("2026-03-01", -1), "2026-02-28")
+
+    def test_zero_is_identity(self):
+        self.assertEqual(convert_time.add_days("2026-06-08", 0), "2026-06-08")
+
+    def test_surrounding_whitespace_ok(self):
+        self.assertEqual(convert_time.add_days("  2026-06-08  ", 1), "2026-06-09")
+
+
+class ToZoneAmbiguity(unittest.TestCase):
+    def test_to_zone_fall_back_ambiguity_warns(self):
+        out = convert_time.convert(
+            "2026-11-01 01:30", "to-zone",
+            from_tz="America/New_York", to_tz="America/Chicago")
+        self.assertIn("ambiguous", out["warning"])
+        self.assertEqual(out["result_utc"], "2026-11-01T05:30:00+00:00")
+
+
+class ExoticZones(unittest.TestCase):
+    """Zones not exercised elsewhere — half-hour, 45-min, southern DST, no-DST."""
+
+    def test_half_hour_zone_kolkata(self):
+        out = convert_time.convert("2026-06-08 14:30", "to-utc", "Asia/Kolkata")
+        self.assertEqual(out["result_utc"], "2026-06-08T09:00:00+00:00")
+        self.assertEqual(out["tzabbrev"], "IST")
+        self.assertEqual(out["local_pretty"], "2:30p IST")
+
+    def test_45_minute_zone_kathmandu_numeric_abbrev(self):
+        out = convert_time.convert("2026-06-08 14:30", "to-utc", "Asia/Kathmandu")
+        self.assertEqual(out["result_utc"], "2026-06-08T08:45:00+00:00")
+        self.assertEqual(out["tzabbrev"], "+0545")
+
+    def test_southern_hemisphere_dst_inverted(self):
+        summer = convert_time.convert("2026-01-15 09:00", "to-utc", "Australia/Sydney")
+        self.assertEqual(summer["result_utc"], "2026-01-14T22:00:00+00:00")
+        self.assertEqual(summer["tzabbrev"], "AEDT")
+        winter = convert_time.convert("2026-07-15 09:00", "to-utc", "Australia/Sydney")
+        self.assertEqual(winter["result_utc"], "2026-07-14T23:00:00+00:00")
+        self.assertEqual(winter["tzabbrev"], "AEST")
+
+    def test_phoenix_no_dst_in_summer(self):
+        out = convert_time.convert("2026-07-01 09:00", "to-utc", "America/Phoenix")
+        self.assertEqual(out["result_utc"], "2026-07-01T16:00:00+00:00")
+        self.assertEqual(out["tzabbrev"], "MST")
+
+
+class Rfc2822Offsets(unittest.TestCase):
+    def test_no_offset_header_uses_tz_flag(self):
+        out = convert_time.convert(
+            "Mon, 8 Jun 2026 14:30:00", "to-utc", "America/Chicago")
+        self.assertEqual(out["interpreted_as"], "2026-06-08T14:30:00-05:00")
+        self.assertEqual(out["result_utc"], "2026-06-08T19:30:00+00:00")
+
+    def test_minus_0000_treated_as_naive(self):
+        # RFC 2822 -0000 means "unknown zone" — same result as no offset + --tz.
+        out = convert_time.convert(
+            "Mon, 8 Jun 2026 14:30:00 -0000", "to-utc", "America/Chicago")
+        self.assertEqual(out["result_utc"], "2026-06-08T19:30:00+00:00")
+
+
+class DateOnlyEdges(unittest.TestCase):
+    def test_compact_iso_date_is_flagged(self):
+        out = convert_time.convert("20260701", "to-utc", "UTC")
+        self.assertIn("date-only", out["warning"])
+
+    def test_hour_only_is_not_date_only(self):
+        out = convert_time.convert("2026-07-01T09", "to-utc", "America/New_York")
+        self.assertEqual(out["interpreted_as"], "2026-07-01T09:00:00-04:00")
+        self.assertIsNone(out["warning"])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
