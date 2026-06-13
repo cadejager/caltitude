@@ -339,6 +339,77 @@ class AddDays(unittest.TestCase):
         with self.assertRaises(ValueError):
             convert_time.add_days("not-a-date", 1)
 
+    def test_negative_crosses_month_leap_aware(self):
+        self.assertEqual(convert_time.add_days("2026-03-01", -1), "2026-02-28")
+
+    def test_zero_is_identity(self):
+        self.assertEqual(convert_time.add_days("2026-06-08", 0), "2026-06-08")
+
+    def test_surrounding_whitespace_ok(self):
+        self.assertEqual(convert_time.add_days("  2026-06-08  ", 1), "2026-06-09")
+
+
+class ToZoneAmbiguity(unittest.TestCase):
+    def test_to_zone_fall_back_ambiguity_warns(self):
+        out = convert_time.convert(
+            "2026-11-01 01:30", "to-zone",
+            from_tz="America/New_York", to_tz="America/Chicago")
+        self.assertIn("ambiguous", out["warning"])
+        self.assertEqual(out["result_utc"], "2026-11-01T05:30:00+00:00")
+
+
+class ExoticZones(unittest.TestCase):
+    """Zones not exercised elsewhere — half-hour, 45-min, southern DST, no-DST."""
+
+    def test_half_hour_zone_kolkata(self):
+        out = convert_time.convert("2026-06-08 14:30", "to-utc", "Asia/Kolkata")
+        self.assertEqual(out["result_utc"], "2026-06-08T09:00:00+00:00")
+        self.assertEqual(out["tzabbrev"], "IST")
+        self.assertEqual(out["local_pretty"], "2:30p IST")
+
+    def test_45_minute_zone_kathmandu_numeric_abbrev(self):
+        out = convert_time.convert("2026-06-08 14:30", "to-utc", "Asia/Kathmandu")
+        self.assertEqual(out["result_utc"], "2026-06-08T08:45:00+00:00")
+        self.assertEqual(out["tzabbrev"], "+0545")
+
+    def test_southern_hemisphere_dst_inverted(self):
+        summer = convert_time.convert("2026-01-15 09:00", "to-utc", "Australia/Sydney")
+        self.assertEqual(summer["result_utc"], "2026-01-14T22:00:00+00:00")
+        self.assertEqual(summer["tzabbrev"], "AEDT")
+        winter = convert_time.convert("2026-07-15 09:00", "to-utc", "Australia/Sydney")
+        self.assertEqual(winter["result_utc"], "2026-07-14T23:00:00+00:00")
+        self.assertEqual(winter["tzabbrev"], "AEST")
+
+    def test_phoenix_no_dst_in_summer(self):
+        out = convert_time.convert("2026-07-01 09:00", "to-utc", "America/Phoenix")
+        self.assertEqual(out["result_utc"], "2026-07-01T16:00:00+00:00")
+        self.assertEqual(out["tzabbrev"], "MST")
+
+
+class Rfc2822Offsets(unittest.TestCase):
+    def test_no_offset_header_uses_tz_flag(self):
+        out = convert_time.convert(
+            "Mon, 8 Jun 2026 14:30:00", "to-utc", "America/Chicago")
+        self.assertEqual(out["interpreted_as"], "2026-06-08T14:30:00-05:00")
+        self.assertEqual(out["result_utc"], "2026-06-08T19:30:00+00:00")
+
+    def test_minus_0000_treated_as_naive(self):
+        # RFC 2822 -0000 means "unknown zone" — same result as no offset + --tz.
+        out = convert_time.convert(
+            "Mon, 8 Jun 2026 14:30:00 -0000", "to-utc", "America/Chicago")
+        self.assertEqual(out["result_utc"], "2026-06-08T19:30:00+00:00")
+
+
+class DateOnlyEdges(unittest.TestCase):
+    def test_compact_iso_date_is_flagged(self):
+        out = convert_time.convert("20260701", "to-utc", "UTC")
+        self.assertIn("date-only", out["warning"])
+
+    def test_hour_only_is_not_date_only(self):
+        out = convert_time.convert("2026-07-01T09", "to-utc", "America/New_York")
+        self.assertEqual(out["interpreted_as"], "2026-07-01T09:00:00-04:00")
+        self.assertIsNone(out["warning"])
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -32,6 +32,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+import unicodedata
 
 # Structured fields that must match exactly — these are the ones that flow into a
 # shell (convert_time.py) or date math, so a bad value is a real injection risk.
@@ -80,15 +81,21 @@ def clean_str(value, field: str):
         return None
     if not isinstance(value, str):
         value = str(value)
-    # Strip control characters (newlines/tabs/etc.) — they enable log/title
-    # injection and never belong in these fields.
-    value = "".join(ch for ch in value if ch >= " " and ch != "\x7f").strip()
+    # Strip control characters (newlines/tabs/etc.) AND Unicode format characters
+    # (category Cf: zero-width spaces, bidi overrides) — they enable log/title
+    # injection and invisible-text / RTL spoofing in the calendar UI.
+    value = "".join(
+        ch for ch in value
+        if ch >= " " and ch != "\x7f" and unicodedata.category(ch) != "Cf"
+    ).strip()
     cap = CAPS.get(field, 200)
     return value[:cap]
 
 
 def _strict(value, pattern: re.Pattern) -> bool:
-    return isinstance(value, str) and bool(pattern.match(value))
+    # fullmatch (not match): `match` + `$` would accept a trailing newline, letting
+    # a shell/date-bound field smuggle an embedded newline past the guard.
+    return isinstance(value, str) and bool(pattern.fullmatch(value))
 
 
 def validate_flight(f, idx: int, warnings: list):
@@ -201,8 +208,8 @@ def main(argv: list | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     try:
         raw = open(argv[0], encoding="utf-8").read() if argv else sys.stdin.read()
-    except OSError as exc:
-        print(f"could not read reader output: {exc}", file=sys.stderr)
+    except (OSError, UnicodeDecodeError) as exc:
+        print(f"REJECTED: could not read reader output: {exc}", file=sys.stderr)
         return 1
     try:
         out = validate(parse_payload(raw))
