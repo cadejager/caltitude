@@ -15,11 +15,22 @@ will do.
 1. A **Gmail connector** is connected (the dedicated inbox the user forwards to).
    If it was just enabled, it only loads in a **new session** — tell the user to
    restart the session if Gmail tools aren't available.
-2. A **Nextcloud connector** is connected, with **calendar** and **files/WebDAV**
-   access (the plugin stores its config and state in Nextcloud).
+2. **Nextcloud is built in** — the plugin bundles its own Nextcloud server, so
+   there is no separate connector to add. Two things must be true for it to start:
+   - The plugin's **Nextcloud fields** are filled (URL, username, app password).
+     These are entered once when the plugin is enabled and stored securely. If the
+     Nextcloud tools (e.g. `nc_calendar_list_calendars`) don't respond, the fields
+     are likely empty — ask the user to fill them in the plugin's settings, then
+     restart the session. (App password: Nextcloud → Settings → Security → Devices
+     & sessions — not the login password.)
+   - **`uv` / `uvx` is installed** (it launches the bundled server). If the
+     Nextcloud tools error with a "uvx not found" message, tell the user to install
+     uv: `curl -LsSf https://astral.sh/uv/install.sh | sh` (macOS/Linux) or
+     `brew install uv`, then restart the session.
 3. **Python 3.9+** is available (used for timezone conversion; stdlib only).
 
-If any is missing, stop and tell the user what to connect before continuing.
+Quick check: call `nc_calendar_list_calendars`. If it succeeds, Nextcloud is ready.
+If it doesn't, resolve the two points above before continuing.
 
 ## Steps
 
