@@ -30,7 +30,9 @@ import re
 import sys
 
 TOOL_NAME = "read_email_overflow"
-MAX_OUTPUT_CHARS = 40000  # comfortably under the tool-output token cap
+# Keep well under the tool-output token cap even for dense/CJK text (~1 token/char
+# worst case): our own result must not re-overflow the cap this tool exists to dodge.
+MAX_OUTPUT_CHARS = 24000
 _URL = re.compile(r"https?://\S+")
 _TAG = re.compile(r"<[^>]+>")
 _WS_RUN = re.compile(r"[ \t]{2,}")
@@ -66,10 +68,11 @@ def _strip(text: str) -> str:
 
 
 def _message_text(msg: dict) -> str:
-    # Prefer the plaintext body; fall back to HTML stripped to text.
-    body = msg.get("plaintextBody") or msg.get("plaintext_body") or ""
+    # Prefer the plaintext body; fall back to HTML stripped to text. Coerce to str
+    # defensively in case a field arrives as a non-string.
+    body = str(msg.get("plaintextBody") or msg.get("plaintext_body") or "")
     if not body.strip():
-        html = msg.get("htmlBody") or msg.get("html_body") or ""
+        html = str(msg.get("htmlBody") or msg.get("html_body") or "")
         body = _TAG.sub(" ", html)
     header = " | ".join(
         f"{k}: {msg.get(k)}" for k in ("subject", "sender", "date") if msg.get(k)

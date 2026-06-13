@@ -64,15 +64,14 @@ fully offline scheduled run will fail).
 
 ## Security model
 
-- **Sender allowlist** is the boundary: an event is only ever created if the
-  email's `From` (the real address, exact-matched) is a trusted sender.
-- **Calendar-add intent** confirms *you* meant to add it — judged by meaning from
-  the note you put at the top of the forward.
-- **Sender filtering in the query**: the orchestrator restricts its Gmail search to
-  approved senders with a `from:(…)` clause, so it never reads the `From` field of
-  incoming mail. (Gmail's `from:` is a search match, slightly looser than exact
+- **Sender allowlist** is the boundary: only mail from a trusted sender can ever
+  create events. The orchestrator enforces this **in the Gmail search query** — a
+  `from:(…)` clause built from your allowlist — so it never reads the `From` field
+  of incoming mail. (Gmail's `from:` is a search match, slightly looser than exact
   address-equality — the accepted trade for keeping attacker-influenced `From` text
   out of the orchestrator.)
+- **Calendar-add intent** confirms *you* meant to add it — judged by meaning from
+  the note you put at the top of the forward.
 - **Sandboxed reader**: the only component that reads email *content* has two
   read-only tools (`get_thread`, and a scoped overflow reader for oversized emails)
   and no action tools — no calendar, labeling, shell, or arbitrary file access — so

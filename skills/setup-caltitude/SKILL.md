@@ -113,11 +113,12 @@ fields for the target calendar and schedule (2.3 and 2.4). Submit the form back 
 accept several addresses.
 
 Store each entry as a **bare, full, lowercase email address** (no display name, no
-angle brackets). At run time `process-flight-emails` parses the real angle-bracket
-address out of `From`, lowercases it, and checks exact equality. Notes:
+angle brackets). At run time `process-flight-emails` builds a Gmail `from:(…)` query
+clause from these, so only mail from these senders is ever returned. Notes:
 - Include any `+` alias in full (`chris+flights@example.com` is its own entry).
-- A display-name match never counts (`"chris@example.com" <attacker@evil.com>` is
-  rejected — only the real address `attacker@evil.com` is compared).
+- Gmail's `from:` is a search match, not a strict address-equality check — a
+  determined display-name spoof *could* match. This is the accepted trade for not
+  reading attacker-influenced `From` text in the orchestrator.
 
 ### 2.2 Confirmation intent (no setup needed)
 There is **no** confirmation phrase to configure. When forwarding, the user just

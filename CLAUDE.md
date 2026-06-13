@@ -59,7 +59,9 @@ the contracts between them. Keep them precise and mutually consistent.
 
 ## Connector facts (verified live — trust these over guesses)
 
-Nextcloud MCP (`mcp__Nextcloud_MCP__*`) — **bundled by the plugin** (v0.3.0+):
+Nextcloud MCP (`mcp__plugin_caltitude_Nextcloud_MCP__*` — plugin-bundled servers are
+namespaced `mcp__plugin_<plugin>_<serverKey>__`, confirmed live; the overflow tool
+below follows the same pattern) — **bundled by the plugin** (v0.3.0+):
 - Declared in the repo-root `.mcp.json` (server `Nextcloud_MCP`): command `/bin/sh`,
   args `["${CLAUDE_PLUGIN_ROOT}/scripts/run-nextcloud-mcp.sh"]`. **No `env` block** —
   see credentials below. Because it's a plugin-bundled server, it loads wherever the

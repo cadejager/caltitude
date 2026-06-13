@@ -52,20 +52,23 @@ class PathGuard(unittest.TestCase):
         creds = os.path.join(self.tmp, ".config", "caltitude")
         os.makedirs(creds, exist_ok=True)
         p = os.path.join(creds, "nextcloud.env")
-        open(p, "w").write("NEXTCLOUD_PASSWORD=secret")
+        with open(p, "w") as _f:
+            _f.write("NEXTCLOUD_PASSWORD=secret")
         self.assertFalse(ov.is_allowed_path(p))
 
     def test_refuses_non_get_thread_txt_in_tool_results(self):
         d = os.path.join(self.tmp, "tool-results")
         os.makedirs(d, exist_ok=True)
         p = os.path.join(d, "notes.txt")
-        open(p, "w").write("x")
+        with open(p, "w") as _f:
+            _f.write("x")
         self.assertFalse(ov.is_allowed_path(p))
 
     def test_refuses_traversal_out_of_tool_results(self):
         # A path that *mentions* tool-results but resolves elsewhere is rejected.
         secret = os.path.join(self.tmp, "secret.txt")
-        open(secret, "w").write("x")
+        with open(secret, "w") as _f:
+            _f.write("x")
         sneaky = os.path.join(self.tmp, "tool-results", "..", "secret.txt")
         self.assertFalse(ov.is_allowed_path(sneaky))
 
@@ -140,7 +143,8 @@ class McpHandlers(unittest.TestCase):
 
     def test_tools_call_refuses_other_path(self):
         creds = os.path.join(self.tmp, "nextcloud.env")
-        open(creds, "w").write("NEXTCLOUD_PASSWORD=secret")
+        with open(creds, "w") as _f:
+            _f.write("NEXTCLOUD_PASSWORD=secret")
         r = ov.handle({"jsonrpc": "2.0", "id": 3, "method": "tools/call",
                        "params": {"name": ov.TOOL_NAME, "arguments": {"path": creds}}})
         self.assertTrue(r["result"]["isError"])
