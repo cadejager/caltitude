@@ -23,26 +23,28 @@ the contracts between them. Keep them precise and mutually consistent.
 ## Invariants — do not break these
 
 - **Prompt-injection boundary.** The orchestrator must NEVER call `get_thread` or
-  otherwise read an email body; it works only from `search_threads` results (IDs,
-  `From`, and an untrusted snippet it must not act on). Only the sandboxed reader
-  reads bodies, and it has no action tools. If you ever give the orchestrator body
-  access or the reader an action tool, you've broken the whole security model.
+  otherwise read an email body; it works only from `search_threads` results (IDs +
+  an untrusted snippet it must not act on). Only the sandboxed reader reads bodies.
+  The reader's tools are exactly two, both **read-only**: `get_thread` and the
+  plugin's scoped `read_email_overflow` (used when `get_thread` overflows the cap —
+  it parses the saved tool-results file and refuses any other path). The reader has
+  **no action tools and no general file/shell access**. If you ever give the
+  orchestrator body access, or the reader an action/write tool or unscoped file
+  read, you've broken the whole security model.
   **One fresh reader per email, dispatched in parallel** — never a single reader
   shared across emails. The per-email isolation keeps one email's body (incl. an
   injection attempt) from bleeding into another's extraction; collapsing it into a
   shared reader is a regression.
-- **Two gates, both required.** An event is created only if (a) the email's real
-  `From` address exactly matches the allowlist (parse the angle-bracket address,
-  lowercase, exact compare — never substring-match the raw header), AND (b) the
-  reader reports calendar-add intent from the forwarder's note. Intent is judged by
-  meaning; there is no configured phrase.
-- **The sender gate stays in the orchestrator — never move it into the reader.**
-  The orchestrator checks the `From` from `search_threads` (the real inbox
-  envelope, which an attacker can't forge to match the allowlist). The reader only
-  sees the body, whose forwarded headers are attacker-spoofable free text (see
-  fixture `08`). Putting the trust decision in the body-exposed, powerless reader
-  would base it on a forgeable `From` and is a security regression. Trust decisions
-  live in the component that sees only structured metadata and wields the actions.
+- **Two gates, both required.** An event is created only if (a) the email is from an
+  approved sender, AND (b) the reader reports calendar-add intent from the
+  forwarder's note. Intent is judged by meaning; there is no configured phrase.
+- **The sender gate is the Gmail query, not From-reading (v0.4.0+).** The
+  orchestrator restricts `search_threads` to approved senders with a `from:(addr1 OR
+  …)` clause built from `allowedSenders`, and does **not** read the `From` field at
+  all (it's attacker-influenced text we keep out of the orchestrator). Caveat: Gmail
+  `from:` is a search match, not strict equality (a determined display-name spoof
+  could match) — accepted trade. Do **not** move the sender decision into the reader
+  (it sees the body / spoofable forwarded headers, cf. fixture `08`).
 - **No LLM date/time math.** Always shell out to `convert_time.py` for UTC/zone
   conversion and date shifting. Adding ad-hoc "the model computes the time" steps is
   a regression.
@@ -57,7 +59,9 @@ the contracts between them. Keep them precise and mutually consistent.
 
 ## Connector facts (verified live — trust these over guesses)
 
-Nextcloud MCP (`mcp__Nextcloud_MCP__*`) — **bundled by the plugin** (v0.3.0+):
+Nextcloud MCP (`mcp__plugin_caltitude_Nextcloud_MCP__*` — plugin-bundled servers are
+namespaced `mcp__plugin_<plugin>_<serverKey>__`, confirmed live; the overflow tool
+below follows the same pattern) — **bundled by the plugin** (v0.3.0+):
 - Declared in the repo-root `.mcp.json` (server `Nextcloud_MCP`): command `/bin/sh`,
   args `["${CLAUDE_PLUGIN_ROOT}/scripts/run-nextcloud-mcp.sh"]`. **No `env` block** —
   see credentials below. Because it's a plugin-bundled server, it loads wherever the
@@ -78,6 +82,18 @@ Nextcloud MCP (`mcp__Nextcloud_MCP__*`) — **bundled by the plugin** (v0.3.0+):
   the assistant never handles the secret), mode `600`. Plaintext-local is the only
   option: plugins have no keychain mechanism.
 - Requires `uv`/`uvx` on the machine; the launcher reports clearly if it's missing.
+
+Overflow reader (`mcp__plugin_caltitude_overflow_reader__read_email_overflow`) —
+second bundled server (`.mcp.json` key `overflow_reader`, launched via
+`scripts/run-overflow-reader.sh` → `scripts/overflow_reader.py`, pure stdlib, no
+uv/network):
+- `get_thread(FULL_CONTENT)` overflows the tool-output cap on big HTML emails (the
+  result is saved to a `tool-results/` file; the reader has no file tool). This tool
+  reads that saved file, returns the plaintext body (HTML stripped, URLs removed,
+  capped to ~40k chars). It is **path-guarded**: only files under a `tool-results/`
+  dir whose name contains `get_thread` and ends `.txt` — so it can't read
+  `nextcloud.env` or anything else. This is the scoping mechanism (plugins can't ship
+  permission rules, so the tool enforces the boundary itself).
 - `nc_calendar_create_event` takes the calendar's **internal `name`** (e.g.
   `chris-ai`), NOT the `display_name` (`AI-Chris`). Setup stores the internal name.
 - **One `timezone` per event.** A flight can't carry a departure TZID on the start
@@ -131,6 +147,9 @@ skipped). Missing `state.json` → first run → scan the whole inbox.
     + DST/date-only edge cases.
   - `python3 evals/test_validate_reader_output.py` — the reader-output guard:
     schema rejection, shell-injection drops, sanitization.
+  - `python3 evals/test_overflow_reader.py` — the overflow MCP tool: path-guard
+    (refuses non-tool-results / creds / traversal), body extraction + compaction,
+    and the MCP initialize/list/call handlers.
 - `evals/reader_agent_evals.md` + `evals/orchestrator_evals.md` are behavioral specs
   (not auto-run). `evals/expected/*.json` hold expected reader output for the two
   real-email fixtures. If you change the reader schema or event-creation rules,

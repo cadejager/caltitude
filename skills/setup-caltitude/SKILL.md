@@ -113,11 +113,12 @@ fields for the target calendar and schedule (2.3 and 2.4). Submit the form back 
 accept several addresses.
 
 Store each entry as a **bare, full, lowercase email address** (no display name, no
-angle brackets). At run time `process-flight-emails` parses the real angle-bracket
-address out of `From`, lowercases it, and checks exact equality. Notes:
+angle brackets). At run time `process-flight-emails` builds a Gmail `from:(…)` query
+clause from these, so only mail from these senders is ever returned. Notes:
 - Include any `+` alias in full (`chris+flights@example.com` is its own entry).
-- A display-name match never counts (`"chris@example.com" <attacker@evil.com>` is
-  rejected — only the real address `attacker@evil.com` is compared).
+- Gmail's `from:` is a search match, not a strict address-equality check — a
+  determined display-name spoof *could* match. This is the accepted trade for not
+  reading attacker-influenced `From` text in the orchestrator.
 
 ### 2.2 Confirmation intent (no setup needed)
 There is **no** confirmation phrase to configure. When forwarding, the user just
@@ -137,10 +138,21 @@ plugin uses a label named **`caltitude`** (created on first run if absent) and
 archives each processed email. No tracking-mode choice is needed.
 
 ### 2.5 Choose how it runs
-Ask: scheduled, manual, or both.
-- If scheduled, set up a recurring task that runs `process-flight-emails` on the
-  chosen cadence (default: every morning).
-- Manual runs are always available regardless.
+Ask whether they want scheduled runs, manual, or both. Manual ("run my flight
+emails") is always available regardless.
+
+For scheduled runs, let the user pick **any number of run times** — e.g. "8am",
+"8am and 6pm", "every 3 hours", "weekdays at noon". Create scheduled task(s) that
+invoke `process-flight-emails` accordingly:
+- Prefer **one** scheduled task whose cron covers all the chosen times when they
+  share a cadence (cron lists work: `0 8,18 * * *` for 8am + 6pm; `0 */3 * * *` for
+  every 3 hours; add `* * 1-5` style day fields for weekday-only).
+- If the requested times can't be expressed in a single cron (genuinely different
+  cadences), create **multiple** scheduled tasks — give each a distinct, descriptive
+  id (e.g. `caltitude-morning`, `caltitude-evening`) so they don't collide and can
+  be managed/removed individually.
+- Confirm back the exact times you scheduled. The user can re-run setup later to
+  add, change, or remove run times.
 
 ### 2.6 Write the config to Nextcloud
 Write the config JSON to **`.config/caltitude/config.json`** in Nextcloud via

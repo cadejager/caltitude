@@ -14,6 +14,7 @@ evals/
 ├── README.md                       ← this file
 ├── test_convert_time.py            ← runnable unit tests: timezone converter (layer 1)
 ├── test_validate_reader_output.py  ← runnable unit tests: reader-output guard (layer 1)
+├── test_overflow_reader.py         ← runnable unit tests: overflow MCP tool (layer 1)
 ├── reader_agent_evals.md           ← cases for email-event-extractor (layer 2)
 ├── orchestrator_evals.md           ← cases for process-flight-emails (layer 2)
 ├── expected/                       ← full expected reader output for the real-email fixtures
@@ -28,7 +29,14 @@ Requires only Python 3.9+ (stdlib `zoneinfo`; the plugin's own dependency).
 # from the plugin root
 python3 evals/test_convert_time.py            # timezone converter
 python3 evals/test_validate_reader_output.py  # reader-output validator/guard
+python3 evals/test_overflow_reader.py         # scoped get_thread-overflow MCP tool
 ```
+
+`test_overflow_reader.py` covers the bundled overflow tool the reader uses when a
+`get_thread` result is too big: its **path-guard** (refuses anything that isn't a
+saved `get_thread` result under a `tool-results/` dir — no creds file, no traversal),
+its body extraction/compaction (HTML stripped, URLs removed, capped), and the
+minimal MCP `initialize`/`tools/list`/`tools/call` handlers.
 
 `test_validate_reader_output.py` covers the deterministic guard the orchestrator
 runs on the reader's (untrusted) output: rejecting non-schema/prose output
