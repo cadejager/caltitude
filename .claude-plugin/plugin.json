@@ -1,9 +1,29 @@
 {
   "name": "caltitude",
-  "version": "0.2.0",
-  "description": "Turns forwarded travel emails (flights, hotels, car rentals) into Nextcloud calendar events. Reads new mail from an allowlist of senders, extracts each item via a sandboxed reader, and creates events on a chosen Nextcloud calendar.",
+  "version": "0.3.0",
+  "description": "Turns forwarded travel emails (flights, hotels, car rentals) into Nextcloud calendar events. Reads new mail from an allowlist of senders, extracts each item via a sandboxed reader, and creates events on a chosen Nextcloud calendar. Bundles its own Nextcloud connector.",
   "author": {
     "name": "Chris DeJager"
   },
-  "keywords": ["calendar", "email", "travel", "flights", "hotels", "car-rental", "itinerary", "gmail", "nextcloud"]
+  "keywords": ["calendar", "email", "travel", "flights", "hotels", "car-rental", "itinerary", "gmail", "nextcloud"],
+  "userConfig": {
+    "nextcloud_host": {
+      "type": "string",
+      "title": "Nextcloud URL",
+      "description": "Your Nextcloud server address, e.g. https://cloud.example.com",
+      "required": true
+    },
+    "nextcloud_username": {
+      "type": "string",
+      "title": "Nextcloud username",
+      "required": true
+    },
+    "nextcloud_app_password": {
+      "type": "string",
+      "title": "Nextcloud app password",
+      "description": "Create one in Nextcloud → Settings → Security → Devices & sessions. Not your login password.",
+      "sensitive": true,
+      "required": true
+    }
+  }
 }

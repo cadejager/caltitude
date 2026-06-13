@@ -57,7 +57,17 @@ the contracts between them. Keep them precise and mutually consistent.
 
 ## Connector facts (verified live — trust these over guesses)
 
-Nextcloud MCP (`mcp__Nextcloud_MCP__*`):
+Nextcloud MCP (`mcp__Nextcloud_MCP__*`) — **bundled by the plugin** (v0.3.0+):
+- Declared in the repo-root `.mcp.json` (server `Nextcloud_MCP`, command
+  `${CLAUDE_PLUGIN_ROOT}/scripts/run-nextcloud-mcp.sh` → `uvx nextcloud-mcp-server`).
+  Because it's a plugin-bundled server, it loads wherever the plugin's skill runs,
+  **including scheduled tasks** — a Claude Desktop `.mcpb` extension does NOT load in
+  scheduled tasks, which is the bug this fixed.
+- Credentials are the plugin's `userConfig` in `plugin.json` (`nextcloud_host`,
+  `nextcloud_username`, `nextcloud_app_password` with `sensitive: true` → OS
+  keychain / `~/.claude/.credentials.json`), injected via `${user_config.*}` in
+  `.mcp.json`'s `env`. Never collect or store these in a skill/file ourselves.
+- Requires `uv`/`uvx` on the machine; the launcher reports clearly if it's missing.
 - `nc_calendar_create_event` takes the calendar's **internal `name`** (e.g.
   `chris-ai`), NOT the `display_name` (`AI-Chris`). Setup stores the internal name.
 - **One `timezone` per event.** A flight can't carry a departure TZID on the start

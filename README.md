@@ -31,9 +31,19 @@ intent by meaning.
 
 - A **Gmail connector** for the dedicated inbox. (If you just enabled it, restart
   the session so its tools load.)
-- A **Nextcloud connector** with calendar **and** files/WebDAV access (the plugin
-  stores its config and state in Nextcloud).
+- **`uv` / `uvx`** installed — it launches the bundled Nextcloud server.
+  (`curl -LsSf https://astral.sh/uv/install.sh | sh`, or `brew install uv`.)
 - **Python 3.9+** (used for exact timezone conversion; standard library only).
+
+**Nextcloud is built in** — the plugin ships its own Nextcloud connector, so there's
+nothing separate to install or connect. When you enable the plugin it asks once for
+your **Nextcloud URL, username, and an app password** (Nextcloud → Settings →
+Security → Devices & sessions). The password is stored securely (your OS keychain).
+Because the connector is part of the plugin, it works in **scheduled runs** too —
+not just interactive sessions.
+
+> Upgrading from a version that used a separate Nextcloud **desktop extension**?
+> Remove/disable that extension so you don't end up with two Nextcloud servers.
 
 ## Security model
 
@@ -81,7 +91,9 @@ Layout:
 
 | Path | What it is |
 | --- | --- |
-| `.claude-plugin/plugin.json` | Plugin manifest |
+| `.claude-plugin/plugin.json` | Plugin manifest + `userConfig` (Nextcloud URL/username/app-password) |
+| `.mcp.json` | Bundles the Nextcloud MCP server, with credentials from `userConfig` |
+| `scripts/run-nextcloud-mcp.sh` / `.cmd` | Launcher that locates `uvx` and starts the Nextcloud server |
 | `skills/` | The `setup-caltitude` and `process-flight-emails` skills |
 | `agents/email-event-extractor.md` | Sandboxed reader agent (the injection boundary) |
 | `scripts/convert_time.py` | Deterministic timezone converter (local↔UTC↔zone) + `add-days` date math |
