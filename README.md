@@ -16,12 +16,14 @@ flight, hotel, and car rental into an event on your calendar — automatically.
 
 ## Setup
 
-Run the **setup-caltitude** skill once. It asks for:
+Run the **setup-caltitude** skill once. It runs in two phases:
 
-- **Trusted senders** — the addresses you'll forward from, each entered as its own
-  field. Only emails from these can ever create events.
-- **Target calendar** — picked from your Nextcloud calendar list.
-- **Schedule** — run automatically (e.g. each morning), manually, or both.
+- **Phase 1 — Nextcloud credentials:** it writes `~/.config/caltitude/nextcloud.env`
+  with your Nextcloud URL and username; you paste your app password into that file
+  and restart the session so the bundled server picks it up.
+- **Phase 2 — configuration:** once Nextcloud responds, it collects **trusted
+  senders** (each its own field; only these can create events), the **target
+  calendar**, and the **schedule** (automatic / manual / both).
 
 There is **no fixed confirmation phrase** to configure: just add a short
 "add this to my calendar" note when you forward, and the reader recognizes the
@@ -36,13 +38,20 @@ intent by meaning.
 - **Python 3.9+** (used for exact timezone conversion; standard library only).
 
 **Nextcloud is built in** — the plugin ships its own Nextcloud connector, so there's
-nothing separate to install or connect. When you enable the plugin it asks once for
-your **Nextcloud URL, username, and an app password** (Nextcloud → Settings →
-Security → Devices & sessions). The password is stored securely (your OS keychain).
-Because the connector is part of the plugin, it works in **scheduled runs** too —
+nothing separate to install or connect. Your **Nextcloud URL, username, and app
+password** (Nextcloud → Settings → Security → Devices & sessions) go in a local
+file, `~/.config/caltitude/nextcloud.env` (mode `600`), which the bundled server's
+launcher reads at startup. **`setup-caltitude` walks you through creating it** —
+it writes the host and username for you, and you paste the app password into the
+file yourself (the assistant never handles the secret). Because the connector is
+part of the plugin and reads a local file, it works in **scheduled runs** too —
 not just interactive sessions. First launch fetches the server via `uvx`, so the
 machine needs network access (and, for a scheduled run, a populated `uv` cache — a
 fully offline scheduled run will fail).
+
+> The credentials live in plaintext (file mode `600`, never committed). Claude Code
+> plugins have no keychain/secret-prompt mechanism — that's a Desktop-Extension
+> (`.mcpb`) feature, not available here — so a local restricted file is the path.
 
 > **macOS / Linux only.** The bundled server launches via `/bin/sh`; Windows is not
 > currently supported (a plugin's `.mcp.json` has no per-OS command).
@@ -98,9 +107,9 @@ Layout:
 
 | Path | What it is |
 | --- | --- |
-| `.claude-plugin/plugin.json` | Plugin manifest + `userConfig` (Nextcloud URL/username/app-password) |
-| `.mcp.json` | Bundles the Nextcloud MCP server, with credentials from `userConfig` |
-| `scripts/run-nextcloud-mcp.sh` / `.cmd` | Launcher that locates `uvx` and starts the Nextcloud server |
+| `.claude-plugin/plugin.json` | Plugin manifest |
+| `.mcp.json` | Bundles the Nextcloud MCP server (launched via the script below) |
+| `scripts/run-nextcloud-mcp.sh` / `.cmd` | Launcher: loads creds from `~/.config/caltitude/nextcloud.env`, locates `uvx`, starts the server |
 | `skills/` | The `setup-caltitude` and `process-flight-emails` skills |
 | `agents/email-event-extractor.md` | Sandboxed reader agent (the injection boundary) |
 | `scripts/convert_time.py` | Deterministic timezone converter (local↔UTC↔zone) + `add-days` date math |

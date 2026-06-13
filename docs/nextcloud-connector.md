@@ -6,10 +6,12 @@ connector (see `caldav-plugin-usage.md`, now historical).
 
 > **Bundled (v0.3.0+).** The plugin ships its own Nextcloud server — see the
 > repo-root `.mcp.json` (server `Nextcloud_MCP`, launched via
-> `scripts/run-nextcloud-mcp.sh`). Credentials come from the plugin's `userConfig`
-> (`plugin.json`): `nextcloud_host`, `nextcloud_username`, and the `sensitive`
-> `nextcloud_password` (stored in the OS keychain), injected into the server's
-> env via `${user_config.*}`. These mirror the server author's `mcpb/manifest.json`. Because the server is part of the plugin, it loads
+> `scripts/run-nextcloud-mcp.sh`). **Credentials are NOT `userConfig`/`${user_config.*}`**
+> — those are Desktop-Extension (`.mcpb`) features that don't work in a plugin (and
+> caused the plugin to stop loading when we tried). Instead the launcher loads
+> `~/.config/caltitude/nextcloud.env` (mode `600`) and exports `NEXTCLOUD_HOST`/
+> `USERNAME`/`PASSWORD`; `setup-caltitude` writes that file (host + username; the
+> user pastes the app password). Because the server is part of the plugin, it loads
 > **wherever the plugin's skill runs — including scheduled tasks** (a desktop
 > `.mcpb` extension does *not*, which is why scheduled runs failed before). Requires
 > `uv`/`uvx` on the machine (first launch fetches the server; a fully offline

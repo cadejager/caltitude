@@ -2,12 +2,7 @@
   "mcpServers": {
     "Nextcloud_MCP": {
       "command": "/bin/sh",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/run-nextcloud-mcp.sh"],
-      "env": {
-        "NEXTCLOUD_HOST": "${user_config.nextcloud_host}",
-        "NEXTCLOUD_USERNAME": "${user_config.nextcloud_username}",
-        "NEXTCLOUD_PASSWORD": "${user_config.nextcloud_password}"
-      }
+      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/run-nextcloud-mcp.sh"]
     }
   }
 }

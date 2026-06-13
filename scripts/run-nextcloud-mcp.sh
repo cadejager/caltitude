@@ -1,4 +1,17 @@
 #!/bin/sh
+# Load Nextcloud credentials.
+# This is shipped as a *plugin*, which does NOT render the MCPB-style "userConfig"
+# settings form, so the ${user_config.*} values wired into .mcp.json arrive empty.
+# When NEXTCLOUD_HOST is empty, fall back to a local env file the user controls.
+# This path also works for scheduled runs (no desktop UI is involved at launch).
+# Override the location with CALTITUDE_ENV_FILE if desired.
+CRED_FILE="${CALTITUDE_ENV_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/caltitude/nextcloud.env}"
+if [ -z "$NEXTCLOUD_HOST" ] && [ -f "$CRED_FILE" ]; then
+    # shellcheck disable=SC1090
+    . "$CRED_FILE"
+    export NEXTCLOUD_HOST NEXTCLOUD_USERNAME NEXTCLOUD_PASSWORD
+fi
+
 # Locate uvx — tries the official uv installer location first, then Homebrew, then PATH
 for candidate in \
     "$HOME/.local/bin/uvx" \
