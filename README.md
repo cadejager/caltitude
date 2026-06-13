@@ -40,10 +40,17 @@ nothing separate to install or connect. When you enable the plugin it asks once 
 your **Nextcloud URL, username, and an app password** (Nextcloud → Settings →
 Security → Devices & sessions). The password is stored securely (your OS keychain).
 Because the connector is part of the plugin, it works in **scheduled runs** too —
-not just interactive sessions.
+not just interactive sessions. First launch fetches the server via `uvx`, so the
+machine needs network access (and, for a scheduled run, a populated `uv` cache — a
+fully offline scheduled run will fail).
 
-> Upgrading from a version that used a separate Nextcloud **desktop extension**?
-> Remove/disable that extension so you don't end up with two Nextcloud servers.
+> **macOS / Linux only.** The bundled server launches via `/bin/sh`; Windows is not
+> currently supported (a plugin's `.mcp.json` has no per-OS command).
+
+> **Upgrading from the Nextcloud desktop extension?** **Disable it.** The bundled
+> server and the extension share the same `Nextcloud_MCP` name — if both stay
+> enabled they collide, and a scheduled run could bind to the extension (which
+> doesn't load in scheduled tasks), reproducing the very failure this fixes.
 
 ## Security model
 

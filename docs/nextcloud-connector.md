@@ -12,8 +12,13 @@ connector (see `caldav-plugin-usage.md`, now historical).
 > env via `${user_config.*}`. These mirror the server author's `mcpb/manifest.json`. Because the server is part of the plugin, it loads
 > **wherever the plugin's skill runs — including scheduled tasks** (a desktop
 > `.mcpb` extension does *not*, which is why scheduled runs failed before). Requires
-> `uv`/`uvx` on the machine. If you previously installed the Nextcloud **desktop
-> extension**, disable it so you don't run two Nextcloud servers.
+> `uv`/`uvx` on the machine (first launch fetches the server; a fully offline
+> scheduled run will fail). **macOS/Linux only** — launched via `/bin/sh`; a plugin
+> `.mcp.json` has no `platform_overrides`, so the shipped `run.cmd` is currently
+> unreachable and Windows is unsupported. If you previously installed the Nextcloud
+> **desktop extension**, **disable it**: it shares the `Nextcloud_MCP` name, so with
+> both enabled they collide and a scheduled run could bind to the extension (which
+> doesn't load in scheduled tasks) — reproducing the original failure.
 
 ## Calendar
 
