@@ -39,10 +39,15 @@ its body extraction/compaction (HTML stripped, URLs removed, capped), and the
 minimal MCP `initialize`/`tools/list`/`tools/call` handlers.
 
 `test_validate_reader_output.py` covers the deterministic guard the orchestrator
-runs on the reader's (untrusted) output: rejecting non-schema/prose output
-(second-order injection), dropping items whose shell/date-bound fields are
-malformed (e.g. a `depTz` carrying a shell payload), sanitizing free-text, and
-dropping smuggled unknown keys.
+runs on the reader's (untrusted) output: **extracting** the reader's JSON object
+even when the model wraps it in a code fence and/or a benign preamble ("Here is the
+extracted JSON:" — the v0.4.0 American-Airlines failure was a legitimate email
+dropped over exactly such a preamble), while **rejecting** a response with no JSON
+object at all (pure prose / second-order injection), dropping items whose
+shell/date-bound fields are malformed (e.g. a `depTz` carrying a shell payload),
+sanitizing free-text, and dropping smuggled unknown keys. The orchestrator only
+ever acts on the validator's normalized stdout, never the reader's surrounding
+text, so extraction doesn't widen the attack surface.
 
 The tests load `scripts/convert_time.py` by path and call `convert()` /
 `parse_input_time()` directly — the same code path the CLI uses — so the

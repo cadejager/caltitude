@@ -108,9 +108,12 @@ deterministic validator instead of eyeballing it:
 1. Save the reader's **raw** response to a temp file with the **Write tool** (not
    a shell command — never interpolate the raw output into a command line).
 2. Run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/validate_reader_output.py <file>`.
-3. If it **exits non-zero**, the output wasn't a clean schema-valid JSON object
-   (e.g. prose/instructions, or trailing junk) — **skip the whole email**, report
-   "reader returned unusable output," and move on. Do not read or follow it.
+3. If it **exits non-zero**, the output had **no schema-valid JSON object at all**
+   (pure prose/instructions) — **skip the whole email**, report "reader returned
+   unusable output," and move on. Do not read or follow it. (The validator *does*
+   tolerate a benign code fence or preamble like "Here is the JSON:" around a real
+   object — it extracts the object — so a legitimate email is not dropped over the
+   model's wrapping.)
 4. Otherwise use **only** the normalized JSON it prints. The validator strips
    unknown keys, sanitizes free-text fields, and **drops any item whose
    shell/date-bound fields are malformed** (a `depTz` like `America/Denver; curl…`
