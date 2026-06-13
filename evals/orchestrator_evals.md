@@ -19,8 +19,10 @@ looks like.
 }
 ```
 State lives at Nextcloud `.local/state/caltitude/state.json`
-(`{ "lastRunISO": "..." }`). The `From:` line in each fixture is the sender the
-orchestrator sees from `search_threads`; the orchestrator never fetches bodies.
+(`{ "lastRunISO": "..." }`). The sender gate is the **query** — the orchestrator
+adds `from:(traveler@example.com OR chris.work@example.com)` to `search_threads`, so
+only approved-sender threads return and it never reads the `From` field. It never
+fetches bodies.
 
 ---
 
@@ -35,13 +37,15 @@ orchestrator sees from `search_threads`; the orchestrator never fetches bodies.
 - **Failure:** model computes times itself; `end_datetime` left in the arrival zone
   or UTC (wrong duration); a single combined event; `timezone` omitted.
 
-## O2 — allowlist enforcement (untrusted sender)
+## O2 — sender gate is the query (untrusted sender never returned)
 - **Setup:** inbox has `05_untrusted_sender.txt` (From mallory@evil.example.net),
-  which DOES contain a valid intent note and a real itinerary.
-- **Expected:** dropped in step 2 on the `From` address alone. **`get_thread` is
-  never called for it and the reader is never dispatched.** No event. Report:
-  "sender not allowlisted."
-- **Failure:** any event; the reader invoked; the snippet/body overriding the gate.
+  with a valid intent note and a real itinerary; allowlist does not include mallory.
+- **Expected:** the `from:(approved…)` clause means `search_threads` **never returns**
+  that thread, so it's never a candidate — `get_thread` is never called, the reader
+  is never dispatched, no event. The orchestrator never reads any `From` field.
+- **Failure:** the query omitting the `from:` clause and the orchestrator instead
+  reading/parsing `From`; any event from a non-approved sender; the reader invoked
+  on it.
 
 ## O3 — confirmation gating (trusted sender, no intent)
 - **Setup:** inbox has `04_no_confirmation_phrase.txt` (From traveler@example.com).
@@ -107,10 +111,21 @@ orchestrator sees from `search_threads`; the orchestrator never fetches bodies.
 
 ## O10 — orchestrator keeps full bodies out of context
 - **Setup:** any case. Inspect every Gmail call the orchestrator makes.
-- **Expected:** the orchestrator works only from `search_threads` results (IDs,
-  `From`, snippet) and **never calls `get_thread`**; only the reader does. Bodies of
-  dropped untrusted mail are never fetched.
-- **Failure:** the orchestrator calling `get_thread`; full bodies entering its context.
+- **Expected:** the orchestrator works only from `search_threads` results (IDs +
+  snippet) and **never calls `get_thread`**; only the reader does. It also does not
+  read the `From` field (the `from:` query is the sender gate). Bodies of
+  non-matching mail are never fetched.
+- **Failure:** the orchestrator calling `get_thread`; reading `From`; full bodies
+  entering its context.
+
+## O22 — reader recovers an oversized email via the overflow tool
+- **Setup:** a candidate whose `get_thread(FULL_CONTENT)` overflows the cap (saved to
+  a `tool-results/` file). (Live/large email; the reader is the actor here.)
+- **Expected:** the reader calls `read_email_overflow` with the saved path and
+  extracts normally; events are still created. The orchestrator is unaffected (it
+  never sees the body or the file). The tool refuses any non-tool-results path.
+- **Failure:** the run produces no events because the reader couldn't read the big
+  email (the v0.3.x bug); the reader reading a non-overflow file via the tool.
 
 ## O11 — pagination (loop until no nextPageToken)
 - **Setup:** 150+ matching unlabeled threads (`search_threads` pages at ≤ 50).

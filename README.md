@@ -23,7 +23,8 @@ Run the **setup-caltitude** skill once. It runs in two phases:
   and restart the session so the bundled server picks it up.
 - **Phase 2 — configuration:** once Nextcloud responds, it collects **trusted
   senders** (each its own field; only these can create events), the **target
-  calendar**, and the **schedule** (automatic / manual / both).
+  calendar**, and the **schedule** — pick **any number of run times** (e.g. 8am +
+  6pm, every 3 hours, weekdays only), manual, or both.
 
 There is **no fixed confirmation phrase** to configure: just add a short
 "add this to my calendar" note when you forward, and the reader recognizes the
@@ -67,10 +68,16 @@ fully offline scheduled run will fail).
   email's `From` (the real address, exact-matched) is a trusted sender.
 - **Calendar-add intent** confirms *you* meant to add it — judged by meaning from
   the note you put at the top of the forward.
-- **Sandboxed reader**: the only component that reads email *content* has a single
-  read-only tool (`get_thread`) and no action tools — no calendar, labeling,
-  shell, or file access — so instructions hidden in a body can't cause anything.
-  The orchestrator never fetches the body and gates only on the `From` address.
+- **Sender filtering in the query**: the orchestrator restricts its Gmail search to
+  approved senders with a `from:(…)` clause, so it never reads the `From` field of
+  incoming mail. (Gmail's `from:` is a search match, slightly looser than exact
+  address-equality — the accepted trade for keeping attacker-influenced `From` text
+  out of the orchestrator.)
+- **Sandboxed reader**: the only component that reads email *content* has two
+  read-only tools (`get_thread`, and a scoped overflow reader for oversized emails)
+  and no action tools — no calendar, labeling, shell, or arbitrary file access — so
+  instructions hidden in a body can't cause anything. The orchestrator never fetches
+  the body.
 - **Validated reader output**: even the reader's *result* is treated as untrusted —
   the orchestrator runs it through a deterministic validator and uses only the
   normalized, format-checked JSON, so a subverted reader can't smuggle instructions
@@ -108,8 +115,9 @@ Layout:
 | Path | What it is |
 | --- | --- |
 | `.claude-plugin/plugin.json` | Plugin manifest |
-| `.mcp.json` | Bundles the Nextcloud MCP server (launched via the script below) |
+| `.mcp.json` | Bundles two MCP servers: Nextcloud, and the scoped overflow reader |
 | `scripts/run-nextcloud-mcp.sh` / `.cmd` | Launcher: loads creds from `~/.config/caltitude/nextcloud.env`, locates `uvx`, starts the server |
+| `scripts/overflow_reader.py` + `run-overflow-reader.sh` | Tiny stdlib MCP server: lets the reader read an oversized saved `get_thread` result (scoped to tool-results files only) |
 | `skills/` | The `setup-caltitude` and `process-flight-emails` skills |
 | `agents/email-event-extractor.md` | Sandboxed reader agent (the injection boundary) |
 | `scripts/convert_time.py` | Deterministic timezone converter (local↔UTC↔zone) + `add-days` date math |

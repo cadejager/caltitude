@@ -3,6 +3,10 @@
     "Nextcloud_MCP": {
       "command": "/bin/sh",
       "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/run-nextcloud-mcp.sh"]
+    },
+    "overflow_reader": {
+      "command": "/bin/sh",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/run-overflow-reader.sh"]
     }
   }
 }
