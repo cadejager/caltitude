@@ -8,8 +8,12 @@ that value: it pipes the reader's raw output through this validator and uses ONL
 the normalized JSON this prints. This closes two paths:
 
   1. Second-order injection — the reader emits prose/instructions instead of JSON.
-     Anything that isn't a lone JSON object of the exact schema is rejected
-     (exit 1), so the orchestrator can skip the email and never "reads" the text.
+     The orchestrator never acts on the reader's raw text; it consumes ONLY the
+     normalized JSON this script prints. So we extract the reader's intended JSON
+     object even when the model wraps it in a code fence and/or a benign preamble
+     ("Here is the extracted JSON: ```json {…}```") — that surrounding text never
+     reaches the orchestrator either way. A response with NO schema-valid object
+     (pure prose) is still rejected (exit 1) so the orchestrator skips the email.
   2. Field-value injection — a structured field that the orchestrator feeds to a
      shell (the convert_time.py time/zone args) or to date math (all-day end
      dates) is strictly pattern-checked here. A value like
@@ -49,30 +53,72 @@ CAPS = {
 }
 
 
+def _as_object(s: str):
+    """json.loads(s) if it yields a dict, else None (never raises)."""
+    try:
+        obj = json.loads(s)
+    except (ValueError, json.JSONDecodeError):
+        return None
+    return obj if isinstance(obj, dict) else None
+
+
+def _first_json_object(s: str):
+    """Return the first complete, brace-balanced top-level ``{…}`` substring.
+
+    String-aware so braces inside string values don't miscount. Returns None if
+    there's no '{' or the object never closes. The substring isn't guaranteed to
+    be valid JSON — the caller re-parses it.
+    """
+    start = s.find("{")
+    if start == -1:
+        return None
+    depth = 0
+    in_str = False
+    esc = False
+    for i in range(start, len(s)):
+        ch = s[i]
+        if in_str:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+        elif ch == '"':
+            in_str = True
+        elif ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return s[start:i + 1]
+    return None
+
+
 def parse_payload(raw: str) -> dict:
     """Parse the reader's raw output into a top-level JSON object, or raise.
 
-    Tolerates a single surrounding ``` / ```json fence (a benign model habit) but
-    nothing else — prose around the JSON makes json.loads fail, which is the
-    desired rejection.
+    The reader is supposed to return a lone JSON object, but the model sometimes
+    wraps it in a ```json fence and/or a benign preamble ("Here is the extracted
+    JSON:"). Since the orchestrator acts ONLY on the normalized JSON this script
+    prints — never on the reader's surrounding text — we extract the intended
+    object rather than rejecting the whole (legitimate) email over a preamble.
+    A response with no schema-valid object at all (pure prose) still raises.
     """
     s = raw.strip()
-    if s.startswith("```"):
-        lines = s.splitlines()
-        if lines and lines[0].startswith("```"):
-            lines = lines[1:]
-        if lines and lines[-1].strip() == "```":
-            lines = lines[:-1]
-        s = "\n".join(lines).strip()
     if not s:
         raise ValueError("empty reader output")
-    try:
-        obj = json.loads(s)  # strict: rejects trailing junk after the object
-    except (ValueError, json.JSONDecodeError) as exc:
-        raise ValueError(f"reader output is not valid JSON: {exc}")
-    if not isinstance(obj, dict):
-        raise ValueError("reader output is not a JSON object")
-    return obj
+    # Fast path: the whole response is exactly one JSON object.
+    obj = _as_object(s)
+    if obj is not None:
+        return obj
+    # Otherwise pull the first complete {…} object out of the fence/prose.
+    candidate = _first_json_object(s)
+    if candidate is not None:
+        obj = _as_object(candidate)
+        if obj is not None:
+            return obj
+    raise ValueError("no JSON object found in reader output")
 
 
 def clean_str(value, field: str):

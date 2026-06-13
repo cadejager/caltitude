@@ -1,6 +1,6 @@
 {
   "name": "caltitude",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Turns forwarded travel emails (flights, hotels, car rentals) into Nextcloud calendar events. Reads new mail from an allowlist of senders, extracts each item via a sandboxed reader, and creates events on a chosen Nextcloud calendar. Bundles its own Nextcloud connector.",
   "author": {
     "name": "Chris DeJager"
