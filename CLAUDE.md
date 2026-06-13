@@ -60,6 +60,11 @@ the contracts between them. Keep them precise and mutually consistent.
 Nextcloud MCP (`mcp__Nextcloud_MCP__*`) — **bundled by the plugin** (v0.3.0+):
 - Declared in the repo-root `.mcp.json` (server `Nextcloud_MCP`, command
   `${CLAUDE_PLUGIN_ROOT}/scripts/run-nextcloud-mcp.sh` → `uvx nextcloud-mcp-server`).
+  The launcher `scripts/run-nextcloud-mcp.{sh,cmd}` is **vendored verbatim** from the
+  server author's `mcpb/run.{sh,cmd}`
+  (github.com/cbcoutinho/nextcloud-mcp-server) — don't hand-edit; update by
+  re-copying from upstream. (Windows `.cmd` is shipped but not wired through
+  `.mcp.json`, which has no per-OS command; the `.sh` is the launcher on macOS/Linux.)
   Because it's a plugin-bundled server, it loads wherever the plugin's skill runs,
   **including scheduled tasks** — a Claude Desktop `.mcpb` extension does NOT load in
   scheduled tasks, which is the bug this fixed.

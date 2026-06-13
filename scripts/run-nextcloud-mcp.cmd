@@ -1,19 +1,27 @@
 @echo off
-REM Launch the bundled Nextcloud MCP server (stdio) on Windows.
-REM .mcp.json supplies NEXTCLOUD_HOST/USERNAME/PASSWORD from the plugin userConfig;
-REM this script just locates uvx and execs the server.
+REM Locate uvx — tries common Windows install locations first, then PATH
 
-where uvx >nul 2>nul
-if %ERRORLEVEL%==0 (
+for %%P in (
+    "%USERPROFILE%\.local\bin\uvx.exe"
+    "%USERPROFILE%\.cargo\bin\uvx.exe"
+    "%LOCALAPPDATA%\uv\bin\uvx.exe"
+) do (
+    if exist %%P (
+        %%P nextcloud-mcp-server run --transport stdio
+        exit /b %errorlevel%
+    )
+)
+
+REM Fall back to uvx on PATH if found
+where uvx >nul 2>&1
+if %errorlevel% equ 0 (
     uvx nextcloud-mcp-server run --transport stdio
-    exit /b %ERRORLEVEL%
+    exit /b %errorlevel%
 )
 
-if exist "%USERPROFILE%\.local\bin\uvx.exe" (
-    "%USERPROFILE%\.local\bin\uvx.exe" nextcloud-mcp-server run --transport stdio
-    exit /b %ERRORLEVEL%
-)
-
-echo caltitude: 'uvx' was not found, so the bundled Nextcloud server can't start. 1>&2
-echo Install uv (which provides uvx): https://docs.astral.sh/uv/getting-started/installation/ 1>&2
+REM uvx not found — print actionable error
+echo Error: 'uvx' was not found in any expected location. >&2
+echo Install uv (which provides uvx) from: https://docs.astral.sh/uv/getting-started/installation/ >&2
+echo   Windows: winget install astral-sh.uv >&2
+echo   or:      powershell -c "irm https://astral.sh/uv/install.ps1 | iex" >&2
 exit /b 1
