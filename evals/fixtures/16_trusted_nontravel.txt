@@ -1,0 +1,16 @@
+From: Sam Carter <sam@example.com>
+Subject: Fwd: Appointment reminder
+Date: 2026-09-02T13:00:00Z
+----- BODY -----
+Can you add this to my calendar?
+
+
+
+-------- Forwarded Message --------
+From: Bright Smiles Dental <reminders@brightsmiles.example>
+Subject: Appointment reminder
+
+This is a reminder of your dental cleaning appointment on
+Thursday, September 24, 2026 at 10:30 AM with Dr. Lee.
+
+Please arrive 10 minutes early. Reply CONFIRM to confirm.

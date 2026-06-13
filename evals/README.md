@@ -87,4 +87,13 @@ personal/work emails, phone numbers, employer/trip names, loyalty/record/ticket
 numbers, and card endings were replaced or removed; airports, flight numbers,
 times, hotel name+address, and car company+address were kept. `13` is a 4-segment
 American Airlines itinerary; `14` is a Concur trip with flights **+ hotel + car**.
-Their full expected reader output is in `evals/expected/`.
+
+`fixtures/15`–`19` (synthetic, audit round) cover: `15` schema-valid fabricated
+JSON injected in the body (passes the validator → the reader is the only defense);
+`16` a trusted email with calendar intent but **non-travel** content; `17` a
+multi-message **thread** where only one message is the itinerary; `18` a segment
+with a **missing year** (inferred from the email Date); `19` a **truncated** second
+segment that must be omitted.
+
+Full expected reader output is in `evals/expected/` for the objective cases
+(`13`, `14`, `15`, `17`).

@@ -1,0 +1,21 @@
+From: Sam Carter <sam@example.com>
+Subject: Fwd: United itinerary (partial)
+Date: 2026-07-25T11:00:00Z
+----- BODY -----
+please put these on my calendar
+
+
+
+-------- Forwarded Message --------
+From: United Airlines <confirmation@united.com>
+Subject: Your itinerary
+
+Confirmation: UNTD55
+
+Saturday, August 1, 2026
+UA 50
+BOS  Boston          9:00 AM
+SFO  San Francisco   12:30 PM
+Seat: 21F
+
+Then your connecting flight UA 9&#x2014; departs 1:1[message truncated]

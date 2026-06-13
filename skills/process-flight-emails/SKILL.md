@@ -173,13 +173,20 @@ the report.
   location, confirmation, and the reader's `description`.
 - **No notification:** `reminder_minutes: 0`, `reminder_email: false`.
 
-### 7. Tag and archive each processed email
-For every email the plugin scheduled from:
+### 7. Tag and archive — ONLY emails that produced an event
+Apply this to an email **only if it produced at least one created calendar event**:
 - **Tag:** apply the `<labelName>` (default `caltitude`) label via
   `label_thread(threadId, [labelId])` (or `label_message`). Use the resolved label
   **ID**, not the name. Idempotent.
 - **Archive:** remove it from the inbox via `unlabel_thread`/`unlabel_message` with
   `labelIds: ["INBOX"]`.
+
+**Leave every other email untouched** — do **not** label or archive an email that
+was skipped (not allowlisted, no calendar-add intent, validator-rejected, or no
+extractable/convertible items). caltitude only claims emails it actually acted on,
+so those other emails stay in the inbox for the user — or for a future scheduled
+skill that handles other kinds of mail. (The `after:lastRunISO` cursor keeps them
+from being re-read every run beyond the current window.)
 
 ### 8. Advance state
 Now that the run has succeeded, write `.local/state/caltitude/state.json` with

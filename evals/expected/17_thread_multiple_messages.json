@@ -1,0 +1,16 @@
+{
+  "confirmationPhrasePresent": true,
+  "flights": [
+    {
+      "flightLabel": "DL100",
+      "depAirport": "JFK",
+      "depLocalTime": "2026-10-01 08:00",
+      "depTz": "America/New_York",
+      "arrAirport": "LAX",
+      "arrLocalTime": "2026-10-01 11:30",
+      "arrTz": "America/Los_Angeles"
+    }
+  ],
+  "hotels": [],
+  "cars": []
+}

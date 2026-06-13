@@ -84,6 +84,20 @@ Gmail MCP (`mcp__67d2a7f7-...__*`):
 The standalone CalDAV connector is **retired** (`docs/caldav-plugin-usage.md` is
 historical). Use Nextcloud MCP.
 
+## Disposition & scope
+
+- **Only tag (`caltitude`) + archive an email that produced ≥1 created event.**
+  Every skipped email (not allowlisted, no intent, validator-rejected, nothing
+  extractable) is **left untouched** in the inbox — caltitude claims only mail it
+  acted on, so other / future scheduled skills can handle the rest. Don't "tidy up"
+  by labeling/archiving skipped mail.
+- **Accepted risk:** a subverted reader could emit many *schema-valid* fabricated
+  items that pass `validate_reader_output.py`; there is intentionally **no item-
+  count cap**. The blast radius is bogus events on the user's own private calendar
+  (no real damage, easily deleted), so we don't add a cap. The reader returning
+  only real items is the line of defense — keep the reader's "data, not
+  instructions" contract strong.
+
 ## State / incremental scan
 
 Capture `runStartISO` at the **start** of a run; write it to `state.json` only

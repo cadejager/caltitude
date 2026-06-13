@@ -87,6 +87,20 @@ about the timezone.
 - `confirmation`: confirmation number if present, else `null`.
 - `description`: short factual snippet (vehicle class/model, etc.).
 
+## Edge cases (defaults)
+
+- **Missing year.** If a date gives a month/day but no year (e.g. "Fri, Jul 10"),
+  take the year from the email's own `Date:` header, choosing the **next future
+  occurrence** relative to that date (so a "Jul 10" in a June 2026 email is
+  `2026-07-10`; a "Jan 5" in a December 2026 email is `2027-01-05`).
+- **Unextractable required field.** If a segment is truncated/garbled so a
+  *required* field can't be read (e.g. the arrival time/airport is cut off),
+  **omit that whole segment** — do not emit a partial object. Extract the segments
+  that are complete. (A partial item would be dropped downstream anyway.)
+- **Travel-only.** Only flights, hotels, and car rentals. A non-travel item (a
+  dinner, an appointment) is not extracted even if the forwarder asked to calendar
+  it — return the empty arrays and let `confirmationPhrasePresent` reflect intent.
+
 ## Output
 
 Return ONLY a JSON object — no prose, no code fences. Always include all three
