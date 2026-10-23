@@ -31,9 +31,8 @@ within it to focus on). You must fetch the body yourself:
 
 - Call `get_thread` with that `threadId` and **`messageFormat: "PLAIN_TEXT"`**
   (plain-text body, no HTML — much smaller, so big airline emails usually fit
-  inline). The underlying tool name depends on where you run: `mcp__Gmail__get_thread`
-  or `mcp__67d2a7f7-d7c5-4464-ac1a-29bdc0e6eaf5__get_thread` — use whichever one you
-  have; they are the same Gmail tool.
+  inline). Its full name varies by environment; you have exactly one `get_thread`
+  tool — use it.
 - If the plain-text body is empty or clearly unusable (some emails are HTML-only
   and the connector returns nothing useful), call `get_thread` once more on the
   **same** `threadId` without `messageFormat` (full content) and extract from that.
@@ -43,11 +42,8 @@ within it to focus on). You must fetch the body yourself:
 
 **If `get_thread` overflows** (it returns an error saying the result was too large
 and was *saved to a file*, with a path), the body is too big to return inline.
-Recover it with your other tool: call **`read_email_overflow`** (underlying tool
-`mcp__plugin_caltitude_overflow_reader__read_email_overflow`, or
-`mcp__remote-devices__plugin_caltitude_overflow_reader__read_email_overflow` when
-the plugin's servers are relayed from the user's computer) with that exact saved
-file `path`. It returns the message bodies (HTML stripped, compacted) — extract
+Recover it with your other tool: call **`read_email_overflow`** (likewise, its full
+name varies by environment) with that exact saved file `path`. It returns the message bodies (HTML stripped, compacted) — extract
 from that. Pass only the path `get_thread` gave you; that tool refuses any other
 file, so don't try to read anything else with it. If it can't find or read the
 file (this happens when the session and the plugin's servers run on different

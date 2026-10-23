@@ -86,7 +86,7 @@ fetches bodies.
 - **Setup:** `state.json` has `lastRunISO` = some prior time; inbox has a mix of
   older and newer unlabeled mail from the trusted sender.
 - **Expected:** step 1 captures `runStartISO` = now, then queries
-  `in:inbox -label:"caltitude" after:<YYYY/MM/DD of lastRunISO>` (date form, no
+  `in:inbox -label:"<labelName>" after:<YYYY/MM/DD of lastRunISO>` (date form, no
   epoch math); only mail on/after that date is considered. After the run succeeds,
   `state.json` is rewritten with `lastRunISO` = the **`runStartISO`** captured at the
   start (not a fresh "now"), via `nc_webdav_write_file`.
@@ -95,7 +95,7 @@ fetches bodies.
 
 ## O8 — first run with no state scans whole inbox
 - **Setup:** `.local/state/caltitude/state.json` does not exist.
-- **Expected:** treat "not found" as no prior run → query `in:inbox -label:"caltitude"`
+- **Expected:** treat "not found" as no prior run → query `in:inbox -label:"<labelName>"`
   (no `after:`), process all matching mail, then create state with
   `lastRunISO` = the `runStartISO` captured at the start of the run.
 - **Failure:** crashing on the missing file; using a bogus/epoch-0 `after:`.
@@ -227,7 +227,7 @@ script; cross-check emitted times against `evals/test_convert_time.py` and the
 ## O24 — the label exclusion actually excludes
 - **Setup:** an approved-sender email that already carries the `caltitude` label but
   is still in the inbox.
-- **Expected:** the search uses `-label:"caltitude"` (the name) and does **not**
+- **Expected:** the search uses `-label:"<labelName>"` (the name) and does **not**
   return it.
 - **Failure:** searching with `-label:Label_N` (an ID matches nothing, so the
   exclusion is a no-op and the email is reprocessed).
