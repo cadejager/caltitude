@@ -53,8 +53,11 @@ cursor in step 8, but only after the run succeeds. Capturing it now (before the
 search) means mail that arrives during the run is picked up next time, not skipped.
 
 Resolve the `<labelName>` (default `caltitude`) label to its **ID** via
-`list_labels` (the `label:` operator needs the ID, not the name; `list_labels`
-returns an empty result when no user labels exist). `create_label` it if missing.
+`list_labels` (`list_labels` returns an empty result when no user labels exist);
+`create_label` it if missing. Keep the ID for **labeling** in step 7 — the label
+tools take IDs. The **search** operator is the opposite: `label:` matches the
+label's display **name**, and an ID such as `Label_2` matches nothing, so the query
+below uses the name.
 Read `lastRunISO` from state.
 
 Build a **`from:` clause from `allowedSenders`** so the search only returns mail
@@ -63,13 +66,15 @@ from approved senders — the orchestrator then never has to read the `From` fie
 `allowedSenders` is **empty**, stop and tell the user to run setup — never search
 without a `from:` clause (that would scan all inbox mail).
 - If `lastRunISO` is present: `search_threads` with
-  `q = in:inbox -label:<labelId> after:<YYYY/MM/DD of lastRunISO> from:(addr1 OR addr2 …)`.
+  `q = in:inbox -label:"<labelName>" after:<YYYY/MM/DD of lastRunISO> from:(addr1 OR addr2 …)`.
   The Gmail `after:` operator takes a `YYYY/MM/DD` date (reformat the date part of
   `lastRunISO`; no epoch math). Date granularity is fine: the `-label:caltitude`
   filter and archiving (step 7) prevent same-day reprocessing.
 - If there is **no state** (first run): drop `after:` —
-  `q = in:inbox -label:<labelId> from:(addr1 OR addr2 …)`.
+  `q = in:inbox -label:"<labelName>" from:(addr1 OR addr2 …)`.
 
+Call `search_threads` with `view: "THREAD_VIEW_METADATA_ONLY"` so results carry
+IDs and labels but no subject or snippet (less untrusted text in the orchestrator).
 `search_threads` is paginated — page through it by passing `pageToken` (from the
 previous response's `nextPageToken`) until none is returned. Collect each
 candidate's `threadId` and `messageId`. **Do not read the `From` field, the

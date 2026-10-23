@@ -86,7 +86,7 @@ fetches bodies.
 - **Setup:** `state.json` has `lastRunISO` = some prior time; inbox has a mix of
   older and newer unlabeled mail from the trusted sender.
 - **Expected:** step 1 captures `runStartISO` = now, then queries
-  `in:inbox -label:<caltitude id> after:<YYYY/MM/DD of lastRunISO>` (date form, no
+  `in:inbox -label:"caltitude" after:<YYYY/MM/DD of lastRunISO>` (date form, no
   epoch math); only mail on/after that date is considered. After the run succeeds,
   `state.json` is rewritten with `lastRunISO` = the **`runStartISO`** captured at the
   start (not a fresh "now"), via `nc_webdav_write_file`.
@@ -95,8 +95,8 @@ fetches bodies.
 
 ## O8 — first run with no state scans whole inbox
 - **Setup:** `.local/state/caltitude/state.json` does not exist.
-- **Expected:** treat "not found" as no prior run → query `in:inbox -label:<caltitude
-  id>` (no `after:`), process all matching mail, then create state with
+- **Expected:** treat "not found" as no prior run → query `in:inbox -label:"caltitude"`
+  (no `after:`), process all matching mail, then create state with
   `lastRunISO` = the `runStartISO` captured at the start of the run.
 - **Failure:** crashing on the missing file; using a bogus/epoch-0 `after:`.
 
@@ -119,8 +119,8 @@ fetches bodies.
   entering its context.
 
 ## O22 — reader recovers an oversized email via the overflow tool
-- **Setup:** a candidate whose `get_thread(FULL_CONTENT)` overflows the cap (saved to
-  a `tool-results/` file). (Live/large email; the reader is the actor here.)
+- **Setup:** a candidate whose `get_thread` result overflows the cap even after the
+  reader's PLAIN_TEXT-first call (saved to a `tool-results/` file). (Live/large email; the reader is the actor here.)
 - **Expected:** the reader calls `read_email_overflow` with the saved path and
   extracts normally; events are still created. The orchestrator is unaffected (it
   never sees the body or the file). The tool refuses any non-tool-results path.
@@ -213,3 +213,21 @@ the headline v2 behaviors.
 Conversion-contract cases (O1, O6) verify the model defers timezone math to the
 script; cross-check emitted times against `evals/test_convert_time.py` and the
 `evals/expected/*.json` files for the same inputs.
+
+## O23 — reader agent spawns with its tools in every environment
+- **Setup:** run the job where Gmail's tools are named `mcp__Gmail__*` (current
+  claude.ai / scheduled sessions), and again where they are `mcp__67d2a7f7-…__*`;
+  likewise with the overflow reader local (`mcp__plugin_caltitude_…`) and relayed
+  (`mcp__remote-devices__plugin_caltitude_…`).
+- **Expected:** the `email-event-extractor` spawns in each case with exactly one
+  `get_thread` and one `read_email_overflow`, and nothing else.
+- **Failure:** "would be spawned with zero tools — refusing" (the v0.4.1 failure);
+  the reader gaining any non-read-only tool.
+
+## O24 — the label exclusion actually excludes
+- **Setup:** an approved-sender email that already carries the `caltitude` label but
+  is still in the inbox.
+- **Expected:** the search uses `-label:"caltitude"` (the name) and does **not**
+  return it.
+- **Failure:** searching with `-label:Label_N` (an ID matches nothing, so the
+  exclusion is a no-op and the email is reprocessed).

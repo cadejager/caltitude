@@ -88,17 +88,26 @@ below follows the same pattern) — **bundled by the plugin** (v0.3.0+):
   option: plugins have no keychain mechanism.
 - Requires `uv`/`uvx` on the machine; the launcher reports clearly if it's missing.
 
-Overflow reader (`mcp__plugin_caltitude_overflow_reader__read_email_overflow`) —
+Overflow reader (`mcp__plugin_caltitude_overflow_reader__read_email_overflow`;
+`mcp__remote-devices__plugin_caltitude_overflow_reader__read_email_overflow` when the
+plugin's servers are relayed from the user's computer into a cloud session) —
 second bundled server (`.mcp.json` key `overflow_reader`, launched via
 `scripts/run-overflow-reader.sh` → `scripts/overflow_reader.py`, pure stdlib, no
 uv/network):
-- `get_thread(FULL_CONTENT)` overflows the tool-output cap on big HTML emails (the
-  result is saved to a `tool-results/` file; the reader has no file tool). This tool
-  reads that saved file, returns the plaintext body (HTML stripped, URLs removed,
-  capped to ~40k chars). It is **path-guarded**: only files under a `tool-results/`
-  dir whose name contains `get_thread` and ends `.txt` — so it can't read
-  `nextcloud.env` or anything else. This is the scoping mechanism (plugins can't ship
-  permission rules, so the tool enforces the boundary itself).
+- The reader calls `get_thread` with `messageFormat: PLAIN_TEXT` first (v0.4.2+), which
+  usually keeps big airline emails under the cap. `get_thread(FULL_CONTENT)` can still
+  overflow the tool-output cap on big HTML emails (the result is saved to a
+  `tool-results/` file; the reader has no file tool). This tool reads that saved file
+  and returns the plaintext body (HTML stripped, URLs removed, capped to ~40k chars).
+  It is **path-guarded**: only files under a `tool-results/` dir whose name contains
+  `get_thread` and ends `.txt` — so it can't read `nextcloud.env` or anything else.
+  This is the scoping mechanism (plugins can't ship permission rules, so the tool
+  enforces the boundary itself).
+- **Known limitation:** in a cloud session whose plugin servers are relayed from the
+  user's computer, the overflow file is saved in the cloud container while this
+  server runs on the computer, so it can't read it. The reader then reports "no
+  usable body" and the email is left in the inbox. PLAIN_TEXT-first is what makes
+  this rare.
 - `nc_calendar_create_event` takes the calendar's **internal `name`** (e.g.
   `chris-ai`), NOT the `display_name` (`AI-Chris`). Setup stores the internal name.
 - **One `timezone` per event.** A flight can't carry a departure TZID on the start
@@ -113,11 +122,22 @@ uv/network):
 - Config/state live in Nextcloud WebDAV, locally stateless:
   `.config/caltitude/config.json`, `.local/state/caltitude/state.json`.
 
-Gmail MCP (`mcp__67d2a7f7-...__*`):
+Gmail MCP — tool names **vary by environment**: `mcp__Gmail__*` in current
+claude.ai / scheduled sessions, `mcp__67d2a7f7-d7c5-4464-ac1a-29bdc0e6eaf5__*` in
+older/desktop ones. The reader agent's `tools:` frontmatter lists **both** spellings
+of each tool (and both overflow-reader spellings); the harness ignores names that
+don't exist but **refuses to spawn the agent if none resolve** ("would be spawned
+with zero tools"). That refusal broke scheduled runs once Gmail's tools were
+renamed (no successful run from July 16 to October 2026). When adding a tool to the reader, list every spelling.
 - Thread-oriented: `search_threads` (snippet only, no body), `get_thread` (full
   body), `list_labels` (returns empty when there are no user labels),
   `create_label`, `label_*`/`unlabel_*`.
-- The `label:` search operator needs label **IDs**, not display names.
+- The `label:` **search** operator matches the label's display **name**
+  (`-label:"caltitude"`); an ID like `Label_2` matches nothing. The label/unlabel
+  **tools** take IDs. (Pre-0.4.2 docs had this backwards, which made the
+  `-label:` exclusion a silent no-op.)
+- `search_threads` supports `view: THREAD_VIEW_METADATA_ONLY` (no subject/snippet);
+  the orchestrator uses it. `get_thread` supports `messageFormat: PLAIN_TEXT`.
 - Archive = remove the `INBOX` label via `unlabel_*` with `labelIds:["INBOX"]`.
 - `after:` takes `YYYY/MM/DD` (date granularity is fine — the `caltitude` label +
   archiving prevent same-day reprocessing). Don't use epoch.

@@ -191,9 +191,10 @@ by the deterministic harness; run them by hand or via an LLM-grading harness.
   because of the truncation that follows it.
 
 ### R22 — oversized email recovered via the overflow tool  (live / large fixture)
-- **Setup:** a real, large itinerary (e.g. the 250 KB AA/Concur emails) where
-  `get_thread(FULL_CONTENT)` exceeds the tool-output cap and returns an error with a
-  saved file path instead of the body. (Needs a live thread or a harness that
+- **Setup:** a real, large itinerary (e.g. the 250 KB AA/Concur emails). The reader
+  first calls `get_thread` with `messageFormat: PLAIN_TEXT`; usually that fits and it
+  extracts directly (pass). This case covers when the result still exceeds the
+  tool-output cap and returns an error with a saved file path instead of the body. (Needs a live thread or a harness that
   reproduces the overflow-to-file behavior — not gradable from a static fixture
   alone.)
 - **Expected:** the reader calls **`read_email_overflow`** with that exact saved
